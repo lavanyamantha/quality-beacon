@@ -400,16 +400,21 @@ export default function SettingsPage() {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs text-muted-foreground">Model</Label>
-                <Select defaultValue={p.model}>
-                  <SelectTrigger className="mt-1 bg-muted/30 border-border text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {p.provider === 'openai'
-                      ? ['gpt-4o', 'gpt-4', 'gpt-3.5-turbo'].map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)
-                      : ['claude-3.5-sonnet', 'claude-3-opus', 'claude-3-haiku'].map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <div className="relative mt-1">
+                  <Input
+                    list={`models-${p.id}`}
+                    value={p.model}
+                    onChange={e => setProviders(prev => prev.map(pr => pr.id === p.id ? { ...pr, model: e.target.value } : pr))}
+                    placeholder="Type or select a model…"
+                    className="bg-muted/30 border-border text-sm font-mono"
+                  />
+                  <datalist id={`models-${p.id}`}>
+                    {(knownModels[p.provider] || []).map(m => (
+                      <option key={m} value={m} />
+                    ))}
+                  </datalist>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">Type a custom model name or pick from suggestions</p>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">API Key</Label>
