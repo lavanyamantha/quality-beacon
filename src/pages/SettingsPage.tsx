@@ -120,14 +120,13 @@ export default function SettingsPage() {
   const [environments, setEnvironments] = useState(initialEnvironments);
   const [channels, setChannels] = useState(initialChannels);
   const { demoMode, setDemoMode } = useDemoMode();
-  const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({});
   const [testingConnection, setTestingConnection] = useState<Record<string, 'idle' | 'testing' | 'success' | 'failed'>>({});
-  const { updateCredentials, updateStatus: updateIntegrationStatus } = useIntegrations();
+  const { updateStatus: updateIntegrationStatus } = useIntegrations();
+  const proxyEnabled = isProxyEnabled();
 
-  // Sync credentials to global IntegrationsContext whenever local integrations change
+  // Sync status to global IntegrationsContext whenever local integrations change
   useEffect(() => {
     for (const int of integrations) {
-      updateCredentials(int.id, int.url, int.token);
       updateIntegrationStatus(int.id, int.status, int.lastSync);
     }
   }, [integrations]);
@@ -136,7 +135,6 @@ export default function SettingsPage() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newProviderType, setNewProviderType] = useState('');
   const [newUrl, setNewUrl] = useState('');
-  const [newToken, setNewToken] = useState('');
 
   // add AI provider dialog state
   const [addProviderDialogOpen, setAddProviderDialogOpen] = useState(false);
