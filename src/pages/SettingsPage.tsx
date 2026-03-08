@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useBranding } from '@/contexts/BrandingContext';
+import { useIntegrations } from '@/contexts/IntegrationsContext';
 import {
   Settings, Link2, Bot, Server, Users, Palette, Bell, Database, Shield,
   ChevronLeft, Plus, Trash2, Save, Eye, EyeOff, ToggleLeft, ToggleRight,
