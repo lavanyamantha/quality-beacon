@@ -69,8 +69,8 @@ export default function AppSidebar() {
 
       <div className="p-4 border-t border-sidebar-border">
         <div className="flex items-center gap-2 px-1">
-          <div className="status-dot-healthy" />
-          <span className="text-xs text-muted-foreground">Demo Mode Active</span>
+          <div className={demoMode ? 'status-dot-healthy' : 'w-2 h-2 rounded-full bg-muted-foreground'} />
+          <span className="text-xs text-muted-foreground">{demoMode ? 'Demo Mode Active' : 'Live Mode'}</span>
         </div>
       </div>
     </aside>

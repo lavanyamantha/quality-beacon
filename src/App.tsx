@@ -25,28 +25,30 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/release-advisor" element={<ReleaseAdvisorPage />} />
-            <Route path="/services" element={<ServiceHealthPage />} />
-            <Route path="/test-analytics" element={<TestAnalyticsPage />} />
-            <Route path="/flaky-tests" element={<FlakyTestsPage />} />
-            <Route path="/defects" element={<DefectAnalyticsPage />} />
-            <Route path="/coverage" element={<CoverageInsightsPage />} />
-            <Route path="/pipelines" element={<PipelinesPage />} />
-            <Route path="/timeline" element={<TimelinePage />} />
-            <Route path="/risk" element={<RiskPredictionPage />} />
-            <Route path="/ai-assistant" element={<QAAssistantPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/docs" element={<DocumentationPage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <DemoModeProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/release-advisor" element={<ReleaseAdvisorPage />} />
+              <Route path="/services" element={<ServiceHealthPage />} />
+              <Route path="/test-analytics" element={<TestAnalyticsPage />} />
+              <Route path="/flaky-tests" element={<FlakyTestsPage />} />
+              <Route path="/defects" element={<DefectAnalyticsPage />} />
+              <Route path="/coverage" element={<CoverageInsightsPage />} />
+              <Route path="/pipelines" element={<PipelinesPage />} />
+              <Route path="/timeline" element={<TimelinePage />} />
+              <Route path="/risk" element={<RiskPredictionPage />} />
+              <Route path="/ai-assistant" element={<QAAssistantPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/docs" element={<DocumentationPage />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </DemoModeProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
