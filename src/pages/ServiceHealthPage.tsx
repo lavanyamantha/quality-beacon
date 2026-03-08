@@ -1,5 +1,7 @@
 import { microservices } from '@/data/mockData';
 import { motion } from 'framer-motion';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 
 const healthStyles: Record<string, { dot: string; bg: string }> = {
   healthy: { dot: 'status-dot-healthy', bg: 'bg-success/5' },
@@ -14,6 +16,8 @@ const pipelineColor: Record<string, string> = {
 };
 
 export default function ServiceHealthPage() {
+  const { demoMode } = useDemoMode();
+  if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Microservice Health</h1><p className="text-sm text-muted-foreground mt-0.5">Real-time health monitoring across all services</p></div><NoDataPlaceholder title="Service Health" /></div>);
   return (
     <div className="space-y-6">
       <div>

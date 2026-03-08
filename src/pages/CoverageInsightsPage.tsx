@@ -1,7 +1,11 @@
 import { coverageByService } from '@/data/mockData';
 import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 
 export default function CoverageInsightsPage() {
+  const { demoMode } = useDemoMode();
+  if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Test Coverage Insights</h1><p className="text-sm text-muted-foreground mt-0.5">Coverage analytics across testing layers and services</p></div><NoDataPlaceholder title="Coverage" /></div>);
   return (
     <div className="space-y-6">
       <div>

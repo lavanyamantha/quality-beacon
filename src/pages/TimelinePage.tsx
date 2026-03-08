@@ -1,6 +1,8 @@
 import { releaseTimeline } from '@/data/mockData';
 import { motion } from 'framer-motion';
 import { GitBranch, Rocket, TestTube2, Bug, Clock } from 'lucide-react';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 
 const typeConfig = {
   release: { icon: Rocket, color: 'text-primary', dot: 'bg-primary' },
@@ -11,6 +13,8 @@ const typeConfig = {
 };
 
 export default function TimelinePage() {
+  const { demoMode } = useDemoMode();
+  if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Release Quality Timeline</h1><p className="text-sm text-muted-foreground mt-0.5">Key events during Release 2026.04 cycle</p></div><NoDataPlaceholder title="Timeline" /></div>);
   return (
     <div className="space-y-6 max-w-3xl">
       <div>

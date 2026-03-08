@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 import {
   LayoutDashboard,
   Activity,
@@ -33,6 +34,7 @@ const navItems = [
 
 export default function AppSidebar() {
   const location = useLocation();
+  const { demoMode } = useDemoMode();
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-60 bg-sidebar border-r border-sidebar-border flex flex-col z-50">
@@ -67,8 +69,8 @@ export default function AppSidebar() {
 
       <div className="p-4 border-t border-sidebar-border">
         <div className="flex items-center gap-2 px-1">
-          <div className="status-dot-healthy" />
-          <span className="text-xs text-muted-foreground">Demo Mode Active</span>
+          <div className={demoMode ? 'status-dot-healthy' : 'w-2 h-2 rounded-full bg-muted-foreground'} />
+          <span className="text-xs text-muted-foreground">{demoMode ? 'Demo Mode Active' : 'Live Mode'}</span>
         </div>
       </div>
     </aside>

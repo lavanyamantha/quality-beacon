@@ -1,8 +1,12 @@
 import { Bot, AlertTriangle, CheckCircle, Shield } from 'lucide-react';
 import { aiAdvisorRecommendation, currentRelease } from '@/data/mockData';
 import { motion } from 'framer-motion';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 
 export default function ReleaseAdvisorPage() {
+  const { demoMode } = useDemoMode();
+  if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Autonomous Release Advisor</h1><p className="text-sm text-muted-foreground mt-0.5">AI-powered release readiness recommendation</p></div><NoDataPlaceholder title="Release Advisor" /></div>);
   const { recommendation, confidence, reasons, mitigations } = aiAdvisorRecommendation;
 
   return (

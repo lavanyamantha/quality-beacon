@@ -1,7 +1,11 @@
 import { testExecutions } from '@/data/mockData';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 
 export default function TestAnalyticsPage() {
+  const { demoMode } = useDemoMode();
+  if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Test Analytics</h1><p className="text-sm text-muted-foreground mt-0.5">Test execution trends and metrics</p></div><NoDataPlaceholder title="Test Analytics" /></div>);
   const latest = testExecutions[testExecutions.length - 1];
   const passRate = ((latest.passed / latest.total) * 100).toFixed(1);
 
