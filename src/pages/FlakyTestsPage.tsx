@@ -1,4 +1,5 @@
-import { flakyTests } from '@/data/mockData';
+import { useRelease } from '@/contexts/ReleaseContext';
+import { getFlakyTestsForRelease } from '@/data/releaseDataHelper';
 import { motion } from 'framer-motion';
 import { Zap } from 'lucide-react';
 import { useDemoMode } from '@/contexts/DemoModeContext';
@@ -6,14 +7,18 @@ import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 
 export default function FlakyTestsPage() {
   const { demoMode } = useDemoMode();
+  const { activeRelease } = useRelease();
+
   if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Flaky Test Detection</h1><p className="text-sm text-muted-foreground mt-0.5">Identify and track unreliable tests across pipelines</p></div><NoDataPlaceholder title="Flaky Tests" /></div>);
+
+  const flakyTests = getFlakyTestsForRelease(activeRelease);
   const sorted = [...flakyTests].sort((a, b) => b.flakinessScore - a.flakinessScore);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-foreground">Flaky Test Detection</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Identify and track unreliable tests across pipelines</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Flaky tests for {activeRelease.version}</p>
       </div>
 
       <div className="dashboard-card">

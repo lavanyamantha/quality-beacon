@@ -1,4 +1,5 @@
-import { defects, defectsByRelease } from '@/data/mockData';
+import { useRelease } from '@/contexts/ReleaseContext';
+import { getDefectsForRelease, getDefectsByReleaseForRelease } from '@/data/releaseDataHelper';
 import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import NoDataPlaceholder from '@/components/NoDataPlaceholder';
@@ -19,12 +20,18 @@ const statusBg: Record<string, string> = {
 
 export default function DefectAnalyticsPage() {
   const { demoMode } = useDemoMode();
+  const { activeRelease } = useRelease();
+
   if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Defect Analytics</h1><p className="text-sm text-muted-foreground mt-0.5">Track and analyze defects across releases</p></div><NoDataPlaceholder title="Defect Analytics" /></div>);
+
+  const defects = getDefectsForRelease(activeRelease);
+  const defectsByRelease = getDefectsByReleaseForRelease(activeRelease);
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-foreground">Defect Analytics</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Track and analyze defects across releases</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Defects for {activeRelease.version}</p>
       </div>
 
       <div className="dashboard-card">
@@ -49,7 +56,7 @@ export default function DefectAnalyticsPage() {
 
       <div className="dashboard-card">
         <div className="dashboard-card-header">
-          <span className="dashboard-card-title">Active Defects</span>
+          <span className="dashboard-card-title">Active Defects — {activeRelease.version}</span>
         </div>
         <table className="w-full">
           <thead>

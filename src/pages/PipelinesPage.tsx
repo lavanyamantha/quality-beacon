@@ -1,4 +1,5 @@
-import { pipelines } from '@/data/mockData';
+import { useRelease } from '@/contexts/ReleaseContext';
+import { getPipelinesForRelease } from '@/data/releaseDataHelper';
 import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useDemoMode } from '@/contexts/DemoModeContext';
@@ -12,12 +13,17 @@ const statusConfig = {
 
 export default function PipelinesPage() {
   const { demoMode } = useDemoMode();
+  const { activeRelease } = useRelease();
+
   if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">CI/CD Pipelines</h1><p className="text-sm text-muted-foreground mt-0.5">Pipeline stability and execution metrics</p></div><NoDataPlaceholder title="Pipelines" /></div>);
+
+  const pipelines = getPipelinesForRelease(activeRelease);
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-foreground">CI/CD Pipelines</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Pipeline stability and execution metrics</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Pipeline metrics for {activeRelease.version}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

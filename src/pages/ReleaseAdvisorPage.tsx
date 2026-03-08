@@ -1,19 +1,30 @@
-import { Bot, AlertTriangle, CheckCircle, Shield } from 'lucide-react';
-import { aiAdvisorRecommendation, currentRelease } from '@/data/mockData';
+import { Bot, AlertTriangle, CheckCircle, Shield, XCircle } from 'lucide-react';
+import { useRelease } from '@/contexts/ReleaseContext';
+import { getAIAdvisorForRelease } from '@/data/releaseDataHelper';
 import { motion } from 'framer-motion';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 
+const recStyle: Record<string, { color: string; textClass: string }> = {
+  GO: { color: 'text-success', textClass: 'text-success' },
+  HOLD: { color: 'text-warning', textClass: 'text-warning' },
+  'NO-GO': { color: 'text-destructive', textClass: 'text-destructive' },
+};
+
 export default function ReleaseAdvisorPage() {
   const { demoMode } = useDemoMode();
+  const { activeRelease } = useRelease();
+
   if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Autonomous Release Advisor</h1><p className="text-sm text-muted-foreground mt-0.5">AI-powered release readiness recommendation</p></div><NoDataPlaceholder title="Release Advisor" /></div>);
-  const { recommendation, confidence, reasons, mitigations } = aiAdvisorRecommendation;
+
+  const { recommendation, confidence, reasons, mitigations } = getAIAdvisorForRelease(activeRelease);
+  const style = recStyle[recommendation] || recStyle.HOLD;
 
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
         <h1 className="text-xl font-bold text-foreground">Autonomous Release Advisor</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">AI-powered release readiness recommendation for {currentRelease.version}</p>
+        <p className="text-sm text-muted-foreground mt-0.5">AI-powered release readiness recommendation for {activeRelease.version}</p>
       </div>
 
       <motion.div
@@ -28,7 +39,7 @@ export default function ReleaseAdvisorPage() {
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">AI Recommendation</p>
             <div className="flex items-center gap-3 mt-1">
-              <span className="text-2xl font-bold text-warning">{recommendation}</span>
+              <span className={`text-2xl font-bold ${style.textClass}`}>{recommendation}</span>
               <span className="text-sm text-muted-foreground">Confidence: <span className="font-bold text-foreground">{confidence}%</span></span>
             </div>
           </div>
@@ -70,13 +81,15 @@ export default function ReleaseAdvisorPage() {
             </div>
           </div>
           <ul className="space-y-3">
-            {mitigations.map((m, i) => (
+            {mitigations.length > 0 ? mitigations.map((m, i) => (
               <motion.li key={i} className="flex items-start gap-2.5 text-sm text-foreground"
                 initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}>
                 <span className="status-dot-healthy mt-1.5 flex-shrink-0" />
                 {m}
               </motion.li>
-            ))}
+            )) : (
+              <p className="text-sm text-muted-foreground">No mitigations needed — release is clear.</p>
+            )}
           </ul>
         </div>
       </div>
