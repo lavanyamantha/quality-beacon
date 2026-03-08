@@ -226,6 +226,79 @@ function buildAuthHeaders(type, token) {
   }
 }
 
+// ── Settings persistence (JSON file) ─────────────────────────
+const fs = require('fs');
+const path = require('path');
+const SETTINGS_FILE = path.join(__dirname, 'data', 'settings.json');
+
+function loadSettings() {
+  try {
+    if (fs.existsSync(SETTINGS_FILE)) {
+      return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8'));
+    }
+  } catch (err) {
+    console.error('Failed to load settings:', err.message);
+  }
+  return {};
+}
+
+function saveSettings(data) {
+  try {
+    const dir = path.dirname(SETTINGS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    return true;
+  } catch (err) {
+    console.error('Failed to save settings:', err.message);
+    return false;
+  }
+}
+
+// GET /api/settings — read all settings (authenticated)
+app.get('/api/settings', requireAuth, (req, res) => {
+  res.json(loadSettings());
+});
+
+// GET /api/settings/:section — read a specific section
+app.get('/api/settings/:section', requireAuth, (req, res) => {
+  const settings = loadSettings();
+  const section = req.params.section;
+  res.json({ [section]: settings[section] || null });
+});
+
+// PUT /api/settings/:section — update a specific section (admin only)
+app.put('/api/settings/:section', requireAuth, requireAdmin, (req, res) => {
+  const section = req.params.section;
+  const allowedSections = ['integrations', 'providers', 'environments', 'channels', 'branding', 'governance', 'notifications'];
+  if (!allowedSections.includes(section)) {
+    return res.status(400).json({ error: `Invalid settings section: ${section}` });
+  }
+
+  const settings = loadSettings();
+  settings[section] = req.body.data;
+  settings._lastModified = new Date().toISOString();
+  settings._lastModifiedBy = req.user.email;
+
+  if (saveSettings(settings)) {
+    res.json({ ok: true, section, _lastModified: settings._lastModified });
+  } else {
+    res.status(500).json({ error: 'Failed to persist settings' });
+  }
+});
+
+// PUT /api/settings — bulk update all settings (admin only)
+app.put('/api/settings', requireAuth, requireAdmin, (req, res) => {
+  const settings = { ...loadSettings(), ...req.body };
+  settings._lastModified = new Date().toISOString();
+  settings._lastModifiedBy = req.user.email;
+
+  if (saveSettings(settings)) {
+    res.json({ ok: true, _lastModified: settings._lastModified });
+  } else {
+    res.status(500).json({ error: 'Failed to persist settings' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`✅ QA Dashboard Proxy running on http://localhost:${PORT}`);
   
