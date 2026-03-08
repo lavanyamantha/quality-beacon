@@ -1,4 +1,4 @@
-import { Bell, Search, Menu } from 'lucide-react';
+import { Bell, Search, Menu, FlaskConical } from 'lucide-react';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useRelease } from '@/contexts/ReleaseContext';
 import { Badge } from '@/components/ui/badge';
