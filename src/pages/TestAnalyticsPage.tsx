@@ -48,9 +48,32 @@ function StatCard({ label, value, color = 'text-foreground', delta, deltaLabel, 
 export default function TestAnalyticsPage() {
   const { demoMode } = useDemoMode();
   const { activeRelease } = useRelease();
+  const { integrations } = useIntegrations();
   const [compareRelease, setCompareRelease] = useState<Release | null>(null);
 
-  if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Test Analytics</h1><p className="text-sm text-muted-foreground mt-0.5">Test execution trends and metrics</p></div><NoDataPlaceholder title="Test Analytics" /></div>);
+  // Find connected test source for deep-linking
+  const testSource = integrations.find(i => i.provides.includes('test') && i.status === 'connected');
+
+  const buildTestQueryUrl = useCallback((filter?: { outcome?: string }) => {
+    if (!testSource?.url) return null;
+    const baseUrl = testSource.url.replace(/\/+$/, '');
+    switch (testSource.type) {
+      case 'azure-devops': {
+        const outcome = filter?.outcome ? `&outcome=${encodeURIComponent(filter.outcome)}` : '';
+        return `${baseUrl}/_testManagement/runs?${outcome}`;
+      }
+      case 'github':
+        return `${baseUrl}/actions?query=${encodeURIComponent(filter?.outcome === 'failed' ? 'is:failure' : filter?.outcome === 'passed' ? 'is:success' : '')}`;
+      case 'gitlab':
+        return `${baseUrl}/-/pipelines?status=${filter?.outcome === 'failed' ? 'failed' : filter?.outcome === 'passed' ? 'success' : ''}`;
+      case 'sonarqube':
+        return `${baseUrl}/dashboard?id=`;
+      case 'jenkins':
+        return `${baseUrl}`;
+      default:
+        return null;
+    }
+  }, [testSource]);
 
   const testExecutions = getTestExecutionsForRelease(activeRelease);
   const latest = testExecutions[testExecutions.length - 1];
