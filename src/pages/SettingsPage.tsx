@@ -766,11 +766,45 @@ export default function SettingsPage() {
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">Company Logo</Label>
-            <div className="mt-2 border-2 border-dashed border-border rounded-lg p-8 text-center">
-              <Palette size={24} className="mx-auto text-muted-foreground mb-2" />
-              <p className="text-xs text-muted-foreground">Drag and drop or click to upload logo</p>
-              <p className="text-[10px] text-muted-foreground mt-1">PNG, SVG, or JPEG — max 2MB</p>
-            </div>
+            {brandLogo ? (
+              <div className="mt-2 border border-border rounded-lg p-4 flex items-center gap-4">
+                <img src={brandLogo} alt="Logo preview" className="h-12 w-auto object-contain rounded" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground truncate">{brandLogoName}</p>
+                  <p className="text-[10px] text-muted-foreground">Logo uploaded</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => { setBrandLogo(null); setBrandLogoName(null); }}>
+                  <Trash2 size={14} className="text-muted-foreground" />
+                </Button>
+              </div>
+            ) : (
+              <label className="mt-2 border-2 border-dashed border-border rounded-lg p-8 text-center block cursor-pointer hover:border-primary/40 transition-colors">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 2 * 1024 * 1024) {
+                      toast({ title: 'File too large', description: 'Logo must be under 2MB.', variant: 'destructive' });
+                      return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      setBrandLogo(ev.target?.result as string);
+                      setBrandLogoName(file.name);
+                      toast({ title: 'Logo Uploaded', description: `${file.name} has been set as the company logo.` });
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                />
+                <Palette size={24} className="mx-auto text-muted-foreground mb-2" />
+                <p className="text-xs text-muted-foreground">Drag and drop or click to upload logo</p>
+                <p className="text-[10px] text-muted-foreground mt-1">PNG, SVG, or JPEG — max 2MB</p>
+              </label>
+            )}
+          </div>
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">Theme</Label>
