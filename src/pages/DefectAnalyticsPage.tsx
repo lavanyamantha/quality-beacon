@@ -216,8 +216,8 @@ export default function DefectAnalyticsPage() {
   );
 }
 
-function MetricCard({ label, value, compare, invertDelta, color = 'text-foreground' }: {
-  label: string; value: number | string; compare?: number | null; invertDelta?: boolean; color?: string;
+function MetricCard({ label, value, compare, invertDelta, color = 'text-foreground', href }: {
+  label: string; value: number | string; compare?: number | null; invertDelta?: boolean; color?: string; href?: string | null;
 }) {
   const numVal = typeof value === 'number' ? value : null;
   const delta = numVal !== null && compare !== null && compare !== undefined && compare !== 0
@@ -227,16 +227,29 @@ function MetricCard({ label, value, compare, invertDelta, color = 'text-foregrou
   const DeltaIcon = isGood ? TrendingDown : isBad ? TrendingUp : Minus;
   const deltaColor = isGood ? 'text-success' : isBad ? 'text-destructive' : 'text-muted-foreground';
 
-  return (
-    <div className="dashboard-card">
+  const content = (
+    <>
       <p className="metric-label">{label}</p>
-      <p className={`metric-value ${color}`}>{value}</p>
+      <p className={`metric-value ${color} ${href ? 'group-hover:underline' : ''}`}>
+        {value}
+        {href && <ExternalLink size={12} className="inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />}
+      </p>
       {delta !== null && (
         <div className={`flex items-center gap-1 mt-1 ${deltaColor}`}>
           <DeltaIcon size={10} />
           <span className="text-[10px] font-medium">{delta > 0 ? '+' : ''}{delta.toFixed(0)}%</span>
         </div>
       )}
-    </div>
+    </>
   );
+
+  if (href) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className="dashboard-card group cursor-pointer hover:border-primary/30 transition-colors">
+        {content}
+      </a>
+    );
+  }
+
+  return <div className="dashboard-card">{content}</div>;
 }
