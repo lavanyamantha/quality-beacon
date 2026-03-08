@@ -35,9 +35,7 @@ jobs:
 
       - name: Build
         env:
-          # Set the base path for GitHub Pages (repo name)
-          # This is automatically handled by vite.config.ts reading GITHUB_PAGES=true
-          GITHUB_PAGES: true
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
         run: npm run build
 
       - name: Copy 404.html for SPA routing
