@@ -3,7 +3,7 @@ import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useBranding } from '@/contexts/BrandingContext';
 import { useIntegrations } from '@/contexts/IntegrationsContext';
 import {
-  Settings, Link2, Bot, Server, Users, Palette, Bell, Database, Shield,
+  Settings, Link2, Bot, Server, Users, Palette, Bell, Database, Shield, Activity,
   ChevronLeft, Plus, Trash2, Save, Eye, EyeOff, ToggleLeft, ToggleRight,
   Check, AlertTriangle, Loader2, Wifi, WifiOff, RefreshCw, ExternalLink
 } from 'lucide-react';
