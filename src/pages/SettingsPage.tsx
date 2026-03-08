@@ -805,7 +805,6 @@ export default function SettingsPage() {
               </label>
             )}
           </div>
-          </div>
           <div>
             <Label className="text-xs text-muted-foreground">Theme</Label>
             <div className="flex gap-3 mt-2">
