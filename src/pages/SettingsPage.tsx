@@ -119,7 +119,7 @@ export default function SettingsPage() {
   const [environments, setEnvironments] = useState(initialEnvironments);
   const [channels, setChannels] = useState(initialChannels);
   const { demoMode, setDemoMode } = useDemoMode();
-  const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({});
+  
   const [testingConnection, setTestingConnection] = useState<Record<string, 'idle' | 'testing' | 'success' | 'failed'>>({});
   const { updateStatus: updateIntegrationStatus } = useIntegrations();
   const proxyEnabled = isProxyEnabled();
