@@ -117,6 +117,26 @@ export default function SettingsPage() {
     toast({ title: 'Settings saved', description: `${section} configuration updated successfully.` });
   };
 
+  const handleTestConnection = (int: Integration) => {
+    setTestingConnection(prev => ({ ...prev, [int.id]: 'testing' }));
+    // Simulate a connection test with a delay
+    setTimeout(() => {
+      const success = int.status === 'connected';
+      setTestingConnection(prev => ({ ...prev, [int.id]: success ? 'success' : 'failed' }));
+      toast({
+        title: success ? 'Connection Successful' : 'Connection Failed',
+        description: success
+          ? `${int.name} responded successfully.`
+          : `Unable to reach ${int.name}. Please verify the URL and credentials.`,
+        variant: success ? undefined : 'destructive',
+      });
+      // Reset after a few seconds
+      setTimeout(() => {
+        setTestingConnection(prev => ({ ...prev, [int.id]: 'idle' }));
+      }, 4000);
+    }, 2000);
+  };
+
   const toggleApiKeyVisibility = (id: string) => {
     setShowApiKeys(prev => ({ ...prev, [id]: !prev[id] }));
   };
