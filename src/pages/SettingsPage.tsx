@@ -636,6 +636,7 @@ export default function SettingsPage() {
       </div>
     </div>
   );
+  };
 
   const renderEnvironments = () => (
     <div className="space-y-4">
