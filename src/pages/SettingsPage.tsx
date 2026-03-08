@@ -6,7 +6,7 @@ import { isProxyEnabled, proxyTestConnection } from '@/services/proxyClient';
 import {
   Settings, Link2, Bot, Server, Users, Palette, Bell, Database, Shield, Activity,
   ChevronLeft, Plus, Trash2, Save, Eye, EyeOff, ToggleLeft, ToggleRight,
-  Check, AlertTriangle, Loader2, Wifi, WifiOff, RefreshCw, ExternalLink
+  Check, AlertTriangle, Loader2, Wifi, WifiOff, RefreshCw, ExternalLink, Lock
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
