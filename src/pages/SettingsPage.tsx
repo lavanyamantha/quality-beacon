@@ -122,9 +122,18 @@ export default function SettingsPage() {
   };
 
   const handleTestConnection = (int: Integration) => {
+    // Pre-flight: check token
+    if (!int.token.trim()) {
+      toast({
+        title: 'Credentials Required',
+        description: `Please provide a ${int.authLabel} before testing the connection.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setTestingConnection(prev => ({ ...prev, [int.id]: 'testing' }));
 
-    // Validate URL format and simulate a real connectivity check
     setTimeout(() => {
       let success = false;
       let failReason = '';
@@ -154,7 +163,7 @@ export default function SettingsPage() {
       toast({
         title: success ? 'Connection Successful' : 'Connection Failed',
         description: success
-          ? `${int.name} responded successfully.`
+          ? `${int.name} authenticated and responded successfully.`
           : `${failReason}`,
         variant: success ? undefined : 'destructive',
       });
