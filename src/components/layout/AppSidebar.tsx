@@ -2,6 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useBranding } from '@/contexts/BrandingContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { isProxyEnabled } from '@/services/proxyClient';
 import {
   LayoutDashboard,
   Activity,
@@ -69,7 +70,7 @@ export default function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProp
 
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {navItems
-          .filter(item => !('adminOnly' in item && item.adminOnly) || isAdmin)
+          .filter(item => !('adminOnly' in item && item.adminOnly) || isAdmin || !isProxyEnabled())
           .map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
