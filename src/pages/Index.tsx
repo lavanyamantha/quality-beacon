@@ -57,6 +57,7 @@ export default function Dashboard() {
   const { brandName } = useBranding();
   const dashboardRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
+  const [dismissedAIWarning, setDismissedAIWarning] = useState(false);
 
   const handleExportPDF = async () => {
     if (!dashboardRef.current) return;
