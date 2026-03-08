@@ -1366,6 +1366,7 @@ export default function SettingsPage() {
     integrations: renderIntegrations,
     'ai-providers': renderAIProviders,
     environments: renderEnvironments,
+    'service-health': () => <ServiceHealthSettings />,
     projects: renderProjects,
     branding: renderBranding,
     notifications: renderNotifications,
