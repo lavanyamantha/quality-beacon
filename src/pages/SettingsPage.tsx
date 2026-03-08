@@ -180,7 +180,6 @@ export default function SettingsPage() {
   
   const [testingConnection, setTestingConnection] = useState<Record<string, 'idle' | 'testing' | 'success' | 'failed'>>({});
   const { updateStatus: updateIntegrationStatus } = useIntegrations();
-  const proxyEnabled = isProxyEnabled();
 
   // Sync status to global IntegrationsContext whenever local integrations change
   useEffect(() => {
