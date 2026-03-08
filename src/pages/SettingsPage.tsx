@@ -265,6 +265,8 @@ export default function SettingsPage() {
                 {int.type === 'azure-devops' && 'Azure DevOps → User Settings → Personal Access Tokens'}
                 {int.type === 'jira' && 'Atlassian → Account Settings → Security → API Tokens'}
                 {int.type === 'sonarqube' && 'SonarQube → My Account → Security → Tokens'}
+                {int.type === 'github' && 'GitHub → Settings → Developer Settings → Personal Access Tokens'}
+                {int.type === 'aws' && 'AWS → IAM → Security Credentials → Access Keys'}
               </p>
             </div>
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
