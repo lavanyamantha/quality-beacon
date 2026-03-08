@@ -953,6 +953,10 @@ export default function DocumentationPage() {
                     <tr className="border-b border-border/50"><td className="py-2 px-3"><Badge variant="outline" className="text-xs">GET</Badge></td><td className="py-2 px-3 font-mono text-xs">/api/proxy/:type/health</td><td className="py-2 px-3">Health check an integration endpoint</td></tr>
                     <tr className="border-b border-border/50"><td className="py-2 px-3"><Badge variant="outline" className="text-xs">GET</Badge></td><td className="py-2 px-3 font-mono text-xs">/api/auth/providers</td><td className="py-2 px-3">List available SSO providers (no secrets)</td></tr>
                     <tr className="border-b border-border/50"><td className="py-2 px-3"><Badge variant="outline" className="text-xs">GET</Badge></td><td className="py-2 px-3 font-mono text-xs">/api/auth/me</td><td className="py-2 px-3">Verify JWT and return current user</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3"><Badge variant="outline" className="text-xs">GET</Badge></td><td className="py-2 px-3 font-mono text-xs">/api/settings</td><td className="py-2 px-3">Read all persisted settings (authenticated)</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3"><Badge variant="outline" className="text-xs">GET</Badge></td><td className="py-2 px-3 font-mono text-xs">/api/settings/:section</td><td className="py-2 px-3">Read a specific settings section (authenticated)</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3"><Badge variant="outline" className="text-xs bg-accent/20">PUT</Badge></td><td className="py-2 px-3 font-mono text-xs">/api/settings/:section</td><td className="py-2 px-3">Update a settings section (admin only)</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3"><Badge variant="outline" className="text-xs bg-accent/20">PUT</Badge></td><td className="py-2 px-3 font-mono text-xs">/api/settings</td><td className="py-2 px-3">Bulk update all settings (admin only)</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -969,6 +973,28 @@ export default function DocumentationPage() {
 The proxy attaches auth headers (Basic, Bearer, or
 PRIVATE-TOKEN) based on the integration type.`}</pre>
               </div>
+
+              <div className="mt-4 rounded-lg border border-border bg-muted/30 p-4">
+                <p className="text-xs font-semibold text-foreground mb-2">Example: Save Settings Section</p>
+                <pre className="text-xs text-muted-foreground font-mono whitespace-pre-wrap">{`PUT /api/settings/channels
+Authorization: Bearer <jwt-token>
+Content-Type: application/json
+
+{
+  "data": [
+    { "id": "1", "type": "slack", "target": "#qa-alerts",
+      "webhookUrl": "https://hooks.slack.com/...", "enabled": true }
+  ]
+}
+
+Allowed sections: integrations, providers, environments,
+channels, branding, governance, notifications.
+Settings are persisted to server/data/settings.json.`}</pre>
+              </div>
+
+              <Callout type="info">
+                <strong>Fallback behavior:</strong> When the proxy server is unavailable, the frontend automatically falls back to <code className="text-xs bg-muted rounded px-1 py-0.5">localStorage</code> for settings persistence. When the proxy is deployed, settings are shared across all users and secured behind JWT authentication with admin-only write access.
+              </Callout>
             </CardContent>
           </Card>
 
