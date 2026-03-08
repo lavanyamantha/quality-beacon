@@ -27,6 +27,7 @@ const navItems = [
   { to: '/timeline', icon: Clock, label: 'Release Timeline' },
   { to: '/risk', icon: BarChart3, label: 'Risk Prediction' },
   { to: '/ai-assistant', icon: Cpu, label: 'QA Assistant' },
+  { to: '/docs', icon: BookOpen, label: 'Documentation' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 

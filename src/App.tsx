@@ -41,6 +41,7 @@ const App = () => (
             <Route path="/risk" element={<RiskPredictionPage />} />
             <Route path="/ai-assistant" element={<QAAssistantPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/docs" element={<DocumentationPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
