@@ -212,6 +212,10 @@ export default function SettingsPage() {
     setTimeout(() => setTestingConnection(prev => ({ ...prev, [int.id]: 'idle' })), 5000);
   };
 
+  const toggleApiKeyVisibility = (id: string) => {
+    setShowApiKeys(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
   const statusColor = (s: string) =>
     s === 'connected' ? 'text-success' : s === 'error' ? 'text-destructive' : 'text-muted-foreground';
 
