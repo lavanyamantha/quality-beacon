@@ -80,11 +80,21 @@ const initialEnvironments: Environment[] = [
   { id: '5', name: 'Performance', healthUrl: 'https://perf-api.internal.com/health', pipelineMapping: 'perf-*', enabled: false },
 ];
 
+const CHANNELS_STORAGE_KEY = 'qa-dashboard-notification-channels';
+
 const initialChannels: NotificationChannel[] = [
   { id: '1', type: 'slack', target: '#qa-alerts', webhookUrl: 'https://hooks.slack.com/services/T00/B00/xxxx', enabled: true },
   { id: '2', type: 'email', target: 'qa-team@company.com', enabled: true },
   { id: '3', type: 'teams', target: 'QA Release Channel', webhookUrl: 'https://outlook.office.com/webhook/xxxx', enabled: false },
 ];
+
+function loadChannels(): NotificationChannel[] {
+  try {
+    const stored = localStorage.getItem(CHANNELS_STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch { /* ignore */ }
+  return initialChannels;
+}
 
 /* ─── settings sections ─── */
 const sections = [
@@ -117,7 +127,14 @@ export default function SettingsPage() {
   const [integrations, setIntegrations] = useState(initialIntegrations);
   const [providers, setProviders] = useState(initialProviders);
   const [environments, setEnvironments] = useState(initialEnvironments);
-  const [channels, setChannels] = useState(initialChannels);
+  const [channels, setChannelsRaw] = useState(loadChannels);
+  const setChannels: typeof setChannelsRaw = (update) => {
+    setChannelsRaw(prev => {
+      const next = typeof update === 'function' ? update(prev) : update;
+      try { localStorage.setItem(CHANNELS_STORAGE_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
   const { demoMode, setDemoMode } = useDemoMode();
   
   const [testingConnection, setTestingConnection] = useState<Record<string, 'idle' | 'testing' | 'success' | 'failed'>>({});
