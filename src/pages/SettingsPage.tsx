@@ -555,26 +555,68 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <Server size={16} className="text-primary" />
-                <h3 className="font-semibold text-foreground">{env.name}</h3>
+                <Input
+                  value={env.name}
+                  onChange={e => setEnvironments(prev => prev.map(en => en.id === env.id ? { ...en, name: e.target.value } : en))}
+                  className="bg-transparent border-none text-foreground font-semibold text-base p-0 h-auto focus-visible:ring-1 focus-visible:ring-primary rounded px-2 -ml-2 w-48"
+                />
               </div>
-              <Switch
-                checked={env.enabled}
-                onCheckedChange={(checked) => setEnvironments(prev => prev.map(e => e.id === env.id ? { ...e, enabled: checked } : e))}
-              />
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+                  onClick={() => {
+                    setEnvironments(prev => prev.filter(e => e.id !== env.id));
+                    toast({ title: 'Environment Removed', description: `${env.name} has been removed.` });
+                  }}
+                >
+                  <Trash2 size={14} />
+                </Button>
+                <Switch
+                  checked={env.enabled}
+                  onCheckedChange={(checked) => setEnvironments(prev => prev.map(e => e.id === env.id ? { ...e, enabled: checked } : e))}
+                />
+              </div>
             </div>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs text-muted-foreground">Health Check URL</Label>
-                <Input defaultValue={env.healthUrl} className="mt-1 bg-muted/30 border-border text-sm font-mono" />
+                <Input
+                  value={env.healthUrl}
+                  onChange={e => setEnvironments(prev => prev.map(en => en.id === env.id ? { ...en, healthUrl: e.target.value } : en))}
+                  className="mt-1 bg-muted/30 border-border text-sm font-mono"
+                />
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Pipeline Mapping</Label>
-                <Input defaultValue={env.pipelineMapping} className="mt-1 bg-muted/30 border-border text-sm font-mono" />
+                <Input
+                  value={env.pipelineMapping}
+                  onChange={e => setEnvironments(prev => prev.map(en => en.id === env.id ? { ...en, pipelineMapping: e.target.value } : en))}
+                  className="mt-1 bg-muted/30 border-border text-sm font-mono"
+                />
               </div>
             </div>
           </CardContent>
         </Card>
       ))}
+      <Button
+        variant="outline"
+        className="w-full border-dashed"
+        onClick={() => {
+          const newEnv: Environment = {
+            id: String(Date.now()),
+            name: 'New Environment',
+            healthUrl: 'https://',
+            pipelineMapping: '',
+            enabled: false,
+          };
+          setEnvironments(prev => [...prev, newEnv]);
+          toast({ title: 'Environment Added', description: 'New environment created. Rename and configure it.' });
+        }}
+      >
+        <Plus size={14} className="mr-2" /> Add Environment
+      </Button>
       <div className="flex justify-end">
         <Button onClick={() => handleSave('Environments')}><Save size={14} className="mr-2" /> Save Changes</Button>
       </div>
