@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 import {
   Settings, Link2, Bot, Server, Users, Palette, Bell, Database, Shield,
   ChevronLeft, Plus, Trash2, Save, Eye, EyeOff, ToggleLeft, ToggleRight,
