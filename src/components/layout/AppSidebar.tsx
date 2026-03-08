@@ -34,6 +34,7 @@ const navItems = [
 
 export default function AppSidebar() {
   const location = useLocation();
+  const { demoMode } = useDemoMode();
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-60 bg-sidebar border-r border-sidebar-border flex flex-col z-50">
