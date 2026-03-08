@@ -10,7 +10,7 @@ import DefectSummaryCard from '@/components/dashboard/DefectSummaryCard';
 import PipelineStatusCard from '@/components/dashboard/PipelineStatusCard';
 import FlakyTestCard from '@/components/dashboard/FlakyTestCard';
 import ReadinessTrendCard from '@/components/dashboard/ReadinessTrendCard';
-import { Database, Settings, Download, Loader2 } from 'lucide-react';
+import { Database, Settings, Download, Loader2, AlertTriangle, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { releases } from '@/data/mockData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -57,6 +57,7 @@ export default function Dashboard() {
   const { brandName } = useBranding();
   const dashboardRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
+  const [dismissedAIWarning, setDismissedAIWarning] = useState(false);
 
   const handleExportPDF = async () => {
     if (!dashboardRef.current) return;
@@ -266,6 +267,29 @@ export default function Dashboard() {
           </Button>
         </div>
       </div>
+
+      {/* AI Connection Warning Banner */}
+      {!dismissedAIWarning && (
+        <div className="relative flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm animate-pulse-slow">
+          <AlertTriangle size={18} className="text-warning shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-medium text-warning">AI Provider Connection Not Verified</p>
+            <p className="text-muted-foreground mt-0.5">
+              One or more AI providers have not been tested. Go to{' '}
+              <Link to="/settings" className="text-primary underline underline-offset-2 hover:text-primary/80">
+                Settings → AI Providers
+              </Link>{' '}
+              to verify connections and ensure AI-powered features work correctly.
+            </p>
+          </div>
+          <button
+            onClick={() => setDismissedAIWarning(true)}
+            className="text-muted-foreground hover:text-foreground shrink-0 mt-0.5"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       <div ref={dashboardRef} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
