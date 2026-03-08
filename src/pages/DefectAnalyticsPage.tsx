@@ -18,6 +18,8 @@ const statusBg: Record<string, string> = {
 };
 
 export default function DefectAnalyticsPage() {
+  const { demoMode } = useDemoMode();
+  if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Defect Analytics</h1><p className="text-sm text-muted-foreground mt-0.5">Track and analyze defects across releases</p></div><NoDataPlaceholder title="Defect Analytics" /></div>);
   return (
     <div className="space-y-6">
       <div>

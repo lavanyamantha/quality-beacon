@@ -1,8 +1,12 @@
 import { microservices } from '@/data/mockData';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from 'recharts';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 
 export default function RiskPredictionPage() {
+  const { demoMode } = useDemoMode();
+  if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">AI Risk Prediction</h1><p className="text-sm text-muted-foreground mt-0.5">Predictive risk analysis for Release 2026.04</p></div><NoDataPlaceholder title="Risk Prediction" /></div>);
   const riskData = microservices.map(s => ({
     name: s.name,
     risk: Math.round((s.errorRate * 10 + s.defectDensity * 12 + (100 - s.coverage) * 0.5 + (s.health === 'down' ? 30 : s.health === 'degraded' ? 15 : 0))),
