@@ -60,6 +60,8 @@ const initialIntegrations: Integration[] = [
   { id: '1', name: 'Azure DevOps', type: 'azure-devops', url: 'https://dev.azure.com/myorg', authType: 'pat', authLabel: 'Personal Access Token (PAT)', authPlaceholder: 'Enter your Azure DevOps PAT', token: '', status: 'connected', lastSync: '2026-03-08 09:14' },
   { id: '2', name: 'Jira Cloud', type: 'jira', url: 'https://myteam.atlassian.net', authType: 'api-key', authLabel: 'API Token', authPlaceholder: 'Enter your Atlassian API token', token: '', status: 'disconnected' },
   { id: '3', name: 'SonarQube', type: 'sonarqube', url: 'https://sonar.internal.com', authType: 'api-key', authLabel: 'API Key / Token', authPlaceholder: 'Enter your SonarQube token', token: '', status: 'connected', lastSync: '2026-03-08 08:30' },
+  { id: '4', name: 'GitHub', type: 'github', url: 'https://github.com/myorg', authType: 'pat', authLabel: 'Personal Access Token (PAT)', authPlaceholder: 'Enter your GitHub PAT (classic or fine-grained)', token: '', status: 'disconnected' },
+  { id: '5', name: 'AWS', type: 'aws', url: 'https://console.aws.amazon.com', authType: 'api-key', authLabel: 'Access Key ID / Secret', authPlaceholder: 'Enter your AWS Access Key ID', token: '', status: 'disconnected' },
 ];
 
 const initialProviders: AIProvider[] = [
@@ -144,6 +146,8 @@ export default function SettingsPage() {
           'azure-devops': ['dev.azure.com', 'visualstudio.com'],
           'jira': ['atlassian.net'],
           'sonarqube': ['sonarqube', 'sonar'],
+          'github': ['github.com'],
+          'aws': ['amazonaws.com', 'aws.amazon.com'],
         };
         const allowed = validDomains[int.type] || [];
         const domainMatch = allowed.some(d => parsed.hostname.includes(d));
@@ -261,6 +265,8 @@ export default function SettingsPage() {
                 {int.type === 'azure-devops' && 'Azure DevOps → User Settings → Personal Access Tokens'}
                 {int.type === 'jira' && 'Atlassian → Account Settings → Security → API Tokens'}
                 {int.type === 'sonarqube' && 'SonarQube → My Account → Security → Tokens'}
+                {int.type === 'github' && 'GitHub → Settings → Developer Settings → Personal Access Tokens'}
+                {int.type === 'aws' && 'AWS → IAM → Security Credentials → Access Keys'}
               </p>
             </div>
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
