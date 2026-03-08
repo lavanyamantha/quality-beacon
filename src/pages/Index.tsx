@@ -22,6 +22,14 @@ import jsPDF from 'jspdf';
 
 const environments = ['All', 'Dev', 'QA', 'Stage', 'Prod'];
 
+const compareLinks = [
+  { to: '/test-analytics', label: 'Test Analytics', icon: FlaskConical },
+  { to: '/flaky-tests', label: 'Flaky Tests', icon: Zap },
+  { to: '/defect-analytics', label: 'Defect Analysis', icon: Bug },
+  { to: '/coverage', label: 'Coverage', icon: Shield },
+];
+
+
 function NoDataPlaceholder() {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
