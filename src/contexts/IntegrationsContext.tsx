@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { loadIntegrationsFromEnv } from '@/config/integrations';
+import { isProxyEnabled, fetchIntegrationsFromProxy } from '@/services/proxyClient';
 import { isProxyEnabled, fetchIntegrationsFromProxy } from '@/services/proxyClient';
 
 export interface IntegrationSource {
