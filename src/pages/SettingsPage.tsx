@@ -293,9 +293,75 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       ))}
-      <Button variant="outline" className="w-full border-dashed" onClick={() => toast({ title: 'Add Integration', description: 'Integration wizard would open here.' })}>
+      <Button variant="outline" className="w-full border-dashed" onClick={() => { setNewProviderType(''); setNewUrl(''); setNewToken(''); setAddDialogOpen(true); }}>
         <Plus size={14} className="mr-2" /> Add Integration
       </Button>
+
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add New Integration</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">Provider</Label>
+              <Select value={newProviderType} onValueChange={(v) => { setNewProviderType(v); const p = availableProviders[v]; if (p) setNewUrl(p.urlPlaceholder); }}>
+                <SelectTrigger className="bg-muted/30 border-border text-sm">
+                  <SelectValue placeholder="Select a provider…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(availableProviders)
+                    .filter(([key]) => !integrations.some(i => i.type === key))
+                    .map(([key, p]) => (
+                      <SelectItem key={key} value={key}>{p.name}</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {newProviderType && (() => {
+              const p = availableProviders[newProviderType];
+              return (
+                <>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">URL</Label>
+                    <Input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder={p.urlPlaceholder} className="bg-muted/30 border-border text-sm" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">{p.authLabel}</Label>
+                    <Input type="password" value={newToken} onChange={e => setNewToken(e.target.value)} placeholder={p.authPlaceholder} className="bg-muted/30 border-border text-sm font-mono" />
+                    <p className="text-[10px] text-muted-foreground mt-1">{p.helpText}</p>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddDialogOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!newProviderType || !newUrl.trim()}
+              onClick={() => {
+                const p = availableProviders[newProviderType];
+                const newIntegration: Integration = {
+                  id: String(Date.now()),
+                  name: p.name,
+                  type: p.type,
+                  url: newUrl,
+                  authType: p.authType,
+                  authLabel: p.authLabel,
+                  authPlaceholder: p.authPlaceholder,
+                  token: newToken,
+                  status: 'disconnected',
+                };
+                setIntegrations(prev => [...prev, newIntegration]);
+                setAddDialogOpen(false);
+                toast({ title: 'Integration Added', description: `${p.name} has been added. Connect and test to verify.` });
+              }}
+            >
+              Add Integration
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 
