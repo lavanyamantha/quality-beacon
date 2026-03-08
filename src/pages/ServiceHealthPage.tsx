@@ -1,5 +1,7 @@
 import { microservices } from '@/data/mockData';
 import { motion } from 'framer-motion';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 
 const healthStyles: Record<string, { dot: string; bg: string }> = {
   healthy: { dot: 'status-dot-healthy', bg: 'bg-success/5' },
