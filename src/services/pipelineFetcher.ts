@@ -20,6 +20,8 @@ export async function fetchPipelinesFromSource(
       return fetchGitHubPipelines(integration);
     case 'gitlab':
       return fetchGitLabPipelines(integration);
+    case 'azure-devops':
+      return fetchAzureDevOpsPipelines(integration);
     default:
       return [];
   }
