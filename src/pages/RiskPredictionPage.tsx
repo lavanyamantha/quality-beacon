@@ -1,4 +1,5 @@
-import { microservices } from '@/data/mockData';
+import { useRelease } from '@/contexts/ReleaseContext';
+import { getRiskDataForRelease } from '@/data/releaseDataHelper';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from 'recharts';
 import { useDemoMode } from '@/contexts/DemoModeContext';
@@ -6,26 +7,26 @@ import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 
 export default function RiskPredictionPage() {
   const { demoMode } = useDemoMode();
-  if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">AI Risk Prediction</h1><p className="text-sm text-muted-foreground mt-0.5">Predictive risk analysis for Release 2026.04</p></div><NoDataPlaceholder title="Risk Prediction" /></div>);
-  const riskData = microservices.map(s => ({
-    name: s.name,
-    risk: Math.round((s.errorRate * 10 + s.defectDensity * 12 + (100 - s.coverage) * 0.5 + (s.health === 'down' ? 30 : s.health === 'degraded' ? 15 : 0))),
-  })).sort((a, b) => b.risk - a.risk);
+  const { activeRelease, selectedEnv } = useRelease();
 
-  const overallRisk = 72;
+  if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">AI Risk Prediction</h1><p className="text-sm text-muted-foreground mt-0.5">Predictive risk analysis</p></div><NoDataPlaceholder title="Risk Prediction" /></div>);
+
+  const riskData = getRiskDataForRelease(activeRelease, selectedEnv);
+  const overallRisk = riskData.length > 0 ? Math.round(riskData.reduce((sum, r) => sum + r.risk, 0) / riskData.length) : 0;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-foreground">AI Risk Prediction</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Predictive risk analysis for Release 2026.04</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Risk analysis for {activeRelease.version}</p>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         <div className="dashboard-card col-span-1">
           <p className="metric-label">Overall Risk Score</p>
           <motion.p
-            className="text-5xl font-bold text-warning mt-2"
+            key={overallRisk}
+            className={`text-5xl font-bold mt-2 ${overallRisk > 50 ? 'text-destructive' : overallRisk > 25 ? 'text-warning' : 'text-success'}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >

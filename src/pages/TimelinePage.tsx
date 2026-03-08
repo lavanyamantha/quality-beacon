@@ -1,4 +1,5 @@
-import { releaseTimeline } from '@/data/mockData';
+import { useRelease } from '@/contexts/ReleaseContext';
+import { getTimelineForRelease } from '@/data/releaseDataHelper';
 import { motion } from 'framer-motion';
 import { GitBranch, Rocket, TestTube2, Bug, Clock } from 'lucide-react';
 import { useDemoMode } from '@/contexts/DemoModeContext';
@@ -14,18 +15,23 @@ const typeConfig = {
 
 export default function TimelinePage() {
   const { demoMode } = useDemoMode();
-  if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Release Quality Timeline</h1><p className="text-sm text-muted-foreground mt-0.5">Key events during Release 2026.04 cycle</p></div><NoDataPlaceholder title="Timeline" /></div>);
+  const { activeRelease } = useRelease();
+
+  if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Release Quality Timeline</h1><p className="text-sm text-muted-foreground mt-0.5">Key events during release cycle</p></div><NoDataPlaceholder title="Timeline" /></div>);
+
+  const timeline = getTimelineForRelease(activeRelease);
+
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-xl font-bold text-foreground">Release Quality Timeline</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Key events during Release 2026.04 cycle</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Key events during {activeRelease.version} cycle</p>
       </div>
 
       <div className="relative">
         <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
         <div className="space-y-0">
-          {releaseTimeline.map((item, i) => {
+          {timeline.map((item, i) => {
             const cfg = typeConfig[item.type];
             const Icon = cfg.icon;
             return (

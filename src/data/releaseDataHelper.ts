@@ -1,4 +1,4 @@
-import { Release, testExecutions, defects, flakyTests, pipelines, microservices, readinessMetrics, readinessTrend, aiAdvisorRecommendation } from './mockData';
+import { Release, testExecutions, defects, flakyTests, pipelines, microservices, readinessMetrics, readinessTrend, aiAdvisorRecommendation, coverageByService, releaseTimeline, defectsByRelease } from './mockData';
 
 // Simple seeded multiplier based on release readiness score
 function vary(base: number, release: Release, factor = 0.15): number {
@@ -144,4 +144,42 @@ export function getAIAdvisorForRelease(release: Release) {
     };
   }
   return aiAdvisorRecommendation;
+}
+
+export function getCoverageForRelease(release: Release, env: string) {
+  const services = getMicroservicesForRelease(release, env);
+  const serviceNames = new Set(services.map(s => s.name));
+  const scale = release.readinessScore / 78;
+  return coverageByService
+    .filter(c => serviceNames.has(c.service))
+    .map(c => ({
+      ...c,
+      code: Math.min(100, Math.round(c.code * scale)),
+      api: Math.min(100, Math.round(c.api * scale)),
+      ui: Math.min(100, Math.round(c.ui * scale)),
+    }));
+}
+
+export function getTimelineForRelease(release: Release) {
+  // Adjust timeline events to match the selected release
+  return releaseTimeline.map(item => ({
+    ...item,
+    event: item.event.replace('2026.04', release.version.replace('.0', '')),
+  }));
+}
+
+export function getRiskDataForRelease(release: Release, env: string) {
+  const services = getMicroservicesForRelease(release, env);
+  return services.map(s => ({
+    name: s.name,
+    risk: Math.round((s.errorRate * 10 + s.defectDensity * 12 + (100 - s.coverage) * 0.5 + (s.health === 'down' ? 30 : s.health === 'degraded' ? 15 : 0))),
+  })).sort((a, b) => b.risk - a.risk);
+}
+
+export function getDefectsByReleaseForRelease(release: Release) {
+  const relVersion = release.version.replace('.0', '');
+  return defectsByRelease.map(d => ({
+    ...d,
+    isCurrent: d.release === relVersion,
+  }));
 }

@@ -1,4 +1,5 @@
-import { microservices } from '@/data/mockData';
+import { useRelease } from '@/contexts/ReleaseContext';
+import { getMicroservicesForRelease } from '@/data/releaseDataHelper';
 import { motion } from 'framer-motion';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import NoDataPlaceholder from '@/components/NoDataPlaceholder';
@@ -17,16 +18,21 @@ const pipelineColor: Record<string, string> = {
 
 export default function ServiceHealthPage() {
   const { demoMode } = useDemoMode();
+  const { activeRelease, selectedEnv } = useRelease();
+
   if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Microservice Health</h1><p className="text-sm text-muted-foreground mt-0.5">Real-time health monitoring across all services</p></div><NoDataPlaceholder title="Service Health" /></div>);
+
+  const services = getMicroservicesForRelease(activeRelease, selectedEnv);
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-foreground">Microservice Health</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Real-time health monitoring across all services</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Health monitoring for {activeRelease.version} — {selectedEnv === 'All' ? 'All environments' : selectedEnv}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {microservices.map((svc, i) => (
+        {services.map((svc, i) => (
           <motion.div
             key={svc.id}
             className={`dashboard-card ${healthStyles[svc.health].bg}`}
@@ -41,7 +47,7 @@ export default function ServiceHealthPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Metric label="Error Rate" value={`${svc.errorRate}%`} warn={svc.errorRate > 1} />
+              <Metric label="Error Rate" value={`${svc.errorRate.toFixed(1)}%`} warn={svc.errorRate > 1} />
               <Metric label="Latency" value={`${svc.latency}ms`} warn={svc.latency > 300} />
               <Metric label="Coverage" value={`${svc.coverage}%`} warn={svc.coverage < 75} />
               <Metric label="Defect Density" value={svc.defectDensity.toFixed(1)} warn={svc.defectDensity > 3} />

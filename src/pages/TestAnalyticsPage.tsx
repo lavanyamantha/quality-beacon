@@ -1,11 +1,16 @@
-import { testExecutions } from '@/data/mockData';
+import { useRelease } from '@/contexts/ReleaseContext';
+import { getTestExecutionsForRelease } from '@/data/releaseDataHelper';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 
 export default function TestAnalyticsPage() {
   const { demoMode } = useDemoMode();
+  const { activeRelease } = useRelease();
+
   if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Test Analytics</h1><p className="text-sm text-muted-foreground mt-0.5">Test execution trends and metrics</p></div><NoDataPlaceholder title="Test Analytics" /></div>);
+
+  const testExecutions = getTestExecutionsForRelease(activeRelease);
   const latest = testExecutions[testExecutions.length - 1];
   const passRate = ((latest.passed / latest.total) * 100).toFixed(1);
 
@@ -13,7 +18,7 @@ export default function TestAnalyticsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-foreground">Test Analytics</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Test execution trends and metrics</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Test execution trends for {activeRelease.version}</p>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
