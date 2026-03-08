@@ -656,7 +656,30 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
       <Card className="bg-card border-border">
-        <CardHeader><CardTitle className="text-base">Release Configuration</CardTitle></CardHeader>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Release Configuration</CardTitle>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs"
+              onClick={() => {
+                const connectedIntegrations = integrations.filter(i => i.status === 'connected');
+                if (connectedIntegrations.length === 0) {
+                  toast({ title: 'No Connected Integrations', description: 'Connect an integration first to sync releases.', variant: 'destructive' });
+                  return;
+                }
+                toast({ title: 'Syncing Releases…', description: `Pulling release data from ${connectedIntegrations.map(i => i.name).join(', ')}…` });
+                // Simulate sync
+                setTimeout(() => {
+                  toast({ title: 'Releases Synced', description: 'Release data pulled successfully from connected integrations.' });
+                }, 2000);
+              }}
+            >
+              <RefreshCw size={12} className="mr-1" /> Sync from Integrations
+            </Button>
+          </div>
+        </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
@@ -676,6 +699,50 @@ export default function SettingsPage() {
                   <SelectItem value="quarterly">Quarterly</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* Linked source */}
+          <div>
+            <Label className="text-xs text-muted-foreground">Link to Source</Label>
+            <Select defaultValue="none">
+              <SelectTrigger className="mt-1 bg-muted/30 border-border text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Manual (no integration link)</SelectItem>
+                {integrations.filter(i => i.status === 'connected').map(i => (
+                  <SelectItem key={i.id} value={i.type}>{i.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[10px] text-muted-foreground mt-1">Link releases to a connected integration to enable syncing versions and dates</p>
+          </div>
+
+          {/* Synced releases preview */}
+          <div>
+            <Label className="text-xs text-muted-foreground mb-2 block">Recent Releases</Label>
+            <div className="space-y-2">
+              {[
+                { version: '2026.04.0', date: '2026-04-01', source: 'Azure DevOps', status: 'Planned' },
+                { version: '2026.03.0', date: '2026-03-01', source: 'Azure DevOps', status: 'In Progress' },
+                { version: '2026.02.0', date: '2026-02-01', source: 'Azure DevOps', status: 'Released' },
+              ].map(r => (
+                <div key={r.version} className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-3 py-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-mono font-medium text-foreground">{r.version}</span>
+                    <span className="text-xs text-muted-foreground">{r.date}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={r.status === 'Released' ? 'default' : r.status === 'In Progress' ? 'secondary' : 'outline'} className="text-[10px]">
+                      {r.status}
+                    </Badge>
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <ExternalLink size={10} /> {r.source}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </CardContent>
