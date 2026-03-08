@@ -17,8 +17,13 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PROXY_PORT || 3001;
 
-app.use(cors());
+const { setupStrategies, requireAuth, requireAdmin } = require('./auth');
+
+app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173', credentials: true }));
 app.use(express.json());
+
+// ── Authentication ───────────────────────────────────────────
+setupStrategies(app);
 
 // ── Integration credential registry ──────────────────────────
 // Maps integration type → { url, token } from server-side env vars
