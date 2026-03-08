@@ -235,29 +235,29 @@ export default function SettingsPage() {
                 <AlertTriangle size={14} /> Failed to reach {int.name}. Check URL and credentials.
               </div>
             )}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">URL</Label>
-                <Input defaultValue={int.url} className="bg-muted/30 border-border text-sm" />
-                <p className="text-[10px] text-muted-foreground">
+            <div className="grid md:grid-cols-2 gap-4 items-start">
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1.5 block">URL</Label>
+                <Input defaultValue={int.url} className="bg-muted/30 border-border text-sm h-10" />
+                <p className="text-[10px] text-muted-foreground mt-1.5">
                   Base URL of your {int.name} instance
                 </p>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">{int.authLabel}</Label>
-                <div className="flex gap-2">
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1.5 block">{int.authLabel}</Label>
+                <div className="flex items-center gap-2">
                   <Input
                     type={showApiKeys[int.id] ? 'text' : 'password'}
                     value={int.token}
                     placeholder={int.authPlaceholder}
                     onChange={e => setIntegrations(prev => prev.map(i => i.id === int.id ? { ...i, token: e.target.value } : i))}
-                    className="bg-muted/30 border-border text-sm font-mono"
+                    className="bg-muted/30 border-border text-sm font-mono h-10"
                   />
-                  <Button size="icon" variant="ghost" className="shrink-0" onClick={() => toggleApiKeyVisibility(int.id)}>
+                  <Button size="icon" variant="ghost" className="shrink-0 h-10 w-10" onClick={() => toggleApiKeyVisibility(int.id)}>
                     {showApiKeys[int.id] ? <EyeOff size={14} /> : <Eye size={14} />}
                   </Button>
                 </div>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-[10px] text-muted-foreground mt-1.5">
                   {int.type === 'azure-devops' && 'Azure DevOps → User Settings → Personal Access Tokens'}
                   {int.type === 'jira' && 'Atlassian → Account Settings → Security → API Tokens'}
                   {int.type === 'sonarqube' && 'SonarQube → My Account → Security → Tokens'}
