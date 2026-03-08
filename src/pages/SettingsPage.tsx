@@ -162,6 +162,22 @@ export default function SettingsPage() {
               <div className="flex gap-2">
                 <Button
                   size="sm"
+                  variant="outline"
+                  disabled={int.status !== 'connected' || testingConnection[int.id] === 'testing'}
+                  onClick={() => handleTestConnection(int)}
+                >
+                  {testingConnection[int.id] === 'testing' ? (
+                    <><Loader2 size={14} className="mr-1 animate-spin" /> Testing…</>
+                  ) : testingConnection[int.id] === 'success' ? (
+                    <><Wifi size={14} className="mr-1 text-success" /> Passed</>
+                  ) : testingConnection[int.id] === 'failed' ? (
+                    <><WifiOff size={14} className="mr-1 text-destructive" /> Failed</>
+                  ) : (
+                    <><Wifi size={14} className="mr-1" /> Test Connection</>
+                  )}
+                </Button>
+                <Button
+                  size="sm"
                   variant={int.status === 'connected' ? 'outline' : 'default'}
                   onClick={() => {
                     setIntegrations(prev => prev.map(i => i.id === int.id ? { ...i, status: i.status === 'connected' ? 'disconnected' : 'connected', lastSync: i.status !== 'connected' ? new Date().toISOString().slice(0, 16).replace('T', ' ') : i.lastSync } : i));
@@ -172,6 +188,17 @@ export default function SettingsPage() {
                 </Button>
               </div>
             </div>
+            {/* Inline test result alert */}
+            {testingConnection[int.id] === 'success' && (
+              <div className="mb-3 flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+                <Check size={14} /> Connection to {int.name} verified successfully.
+              </div>
+            )}
+            {testingConnection[int.id] === 'failed' && (
+              <div className="mb-3 flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <AlertTriangle size={14} /> Failed to reach {int.name}. Check URL and credentials.
+              </div>
+            )}
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs text-muted-foreground">URL</Label>
