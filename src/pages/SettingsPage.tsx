@@ -119,21 +119,44 @@ export default function SettingsPage() {
 
   const handleTestConnection = (int: Integration) => {
     setTestingConnection(prev => ({ ...prev, [int.id]: 'testing' }));
-    // Simulate a connection test with a delay
+
+    // Validate URL format and simulate a real connectivity check
     setTimeout(() => {
-      const success = int.status === 'connected';
+      let success = false;
+      let failReason = '';
+
+      try {
+        const parsed = new URL(int.url);
+        const validDomains: Record<string, string[]> = {
+          'azure-devops': ['dev.azure.com', 'visualstudio.com'],
+          'jira': ['atlassian.net'],
+          'sonarqube': ['sonarqube', 'sonar'],
+        };
+        const allowed = validDomains[int.type] || [];
+        const domainMatch = allowed.some(d => parsed.hostname.includes(d));
+
+        if (!domainMatch) {
+          failReason = `URL domain does not match expected ${int.name} endpoints.`;
+        } else if (int.status !== 'connected') {
+          failReason = `Integration is not connected. Connect first, then test.`;
+        } else {
+          success = true;
+        }
+      } catch {
+        failReason = 'Invalid URL format. Please enter a valid URL.';
+      }
+
       setTestingConnection(prev => ({ ...prev, [int.id]: success ? 'success' : 'failed' }));
       toast({
         title: success ? 'Connection Successful' : 'Connection Failed',
         description: success
           ? `${int.name} responded successfully.`
-          : `Unable to reach ${int.name}. Please verify the URL and credentials.`,
+          : `${failReason}`,
         variant: success ? undefined : 'destructive',
       });
-      // Reset after a few seconds
       setTimeout(() => {
         setTestingConnection(prev => ({ ...prev, [int.id]: 'idle' }));
-      }, 4000);
+      }, 5000);
     }, 2000);
   };
 
