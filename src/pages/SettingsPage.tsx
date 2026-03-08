@@ -127,7 +127,7 @@ export default function SettingsPage() {
   const [integrations, setIntegrations] = useState(initialIntegrations);
   const [providers, setProviders] = useState(initialProviders);
   const [environments, setEnvironments] = useState(initialEnvironments);
-  const [channels, setChannels] = useState(initialChannels);
+  const [channels, setChannels] = useState(loadChannels);
   const { demoMode, setDemoMode } = useDemoMode();
   
   const [testingConnection, setTestingConnection] = useState<Record<string, 'idle' | 'testing' | 'success' | 'failed'>>({});
