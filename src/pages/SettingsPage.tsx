@@ -101,16 +101,16 @@ const sections = [
 ];
 
 /* ─── component ─── */
-const availableProviders: Record<string, { name: string; type: string; urlPlaceholder: string; authType: Integration['authType']; authLabel: string; authPlaceholder: string; helpText: string }> = {
-  'azure-devops': { name: 'Azure DevOps', type: 'azure-devops', urlPlaceholder: 'https://dev.azure.com/yourorg', authType: 'pat', authLabel: 'Personal Access Token (PAT)', authPlaceholder: 'Enter your Azure DevOps PAT', helpText: 'Azure DevOps → User Settings → Personal Access Tokens' },
-  'jira': { name: 'Jira Cloud', type: 'jira', urlPlaceholder: 'https://yourteam.atlassian.net', authType: 'api-key', authLabel: 'API Token', authPlaceholder: 'Enter your Atlassian API token', helpText: 'Atlassian → Account Settings → Security → API Tokens' },
-  'sonarqube': { name: 'SonarQube', type: 'sonarqube', urlPlaceholder: 'https://sonar.yourcompany.com', authType: 'api-key', authLabel: 'API Key / Token', authPlaceholder: 'Enter your SonarQube token', helpText: 'SonarQube → My Account → Security → Tokens' },
-  'github': { name: 'GitHub', type: 'github', urlPlaceholder: 'https://github.com/yourorg', authType: 'pat', authLabel: 'Personal Access Token (PAT)', authPlaceholder: 'Enter your GitHub PAT', helpText: 'GitHub → Settings → Developer Settings → Personal Access Tokens' },
-  'aws': { name: 'AWS', type: 'aws', urlPlaceholder: 'https://console.aws.amazon.com', authType: 'api-key', authLabel: 'Access Key ID / Secret', authPlaceholder: 'Enter your AWS Access Key ID', helpText: 'AWS → IAM → Security Credentials → Access Keys' },
-  'gitlab': { name: 'GitLab', type: 'gitlab', urlPlaceholder: 'https://gitlab.com/yourorg', authType: 'pat', authLabel: 'Personal Access Token', authPlaceholder: 'Enter your GitLab PAT', helpText: 'GitLab → Preferences → Access Tokens' },
-  'jenkins': { name: 'Jenkins', type: 'jenkins', urlPlaceholder: 'https://jenkins.yourcompany.com', authType: 'api-key', authLabel: 'API Token', authPlaceholder: 'Enter your Jenkins API token', helpText: 'Jenkins → User → Configure → API Token' },
-  'selenium-grid': { name: 'Selenium Grid', type: 'selenium-grid', urlPlaceholder: 'https://selenium.yourcompany.com', authType: 'api-key', authLabel: 'Access Token', authPlaceholder: 'Enter access token (if required)', helpText: 'Selenium Grid Hub URL with optional auth' },
-  'bitbucket': { name: 'Bitbucket', type: 'bitbucket', urlPlaceholder: 'https://bitbucket.org/yourworkspace', authType: 'pat', authLabel: 'App Password', authPlaceholder: 'Enter your Bitbucket app password', helpText: 'Bitbucket → Personal Settings → App Passwords' },
+const availableProviders: Record<string, { name: string; type: string; urlPlaceholder: string }> = {
+  'azure-devops': { name: 'Azure DevOps', type: 'azure-devops', urlPlaceholder: 'https://dev.azure.com/yourorg' },
+  'jira': { name: 'Jira Cloud', type: 'jira', urlPlaceholder: 'https://yourteam.atlassian.net' },
+  'sonarqube': { name: 'SonarQube', type: 'sonarqube', urlPlaceholder: 'https://sonar.yourcompany.com' },
+  'github': { name: 'GitHub', type: 'github', urlPlaceholder: 'https://github.com/yourorg' },
+  'aws': { name: 'AWS', type: 'aws', urlPlaceholder: 'https://console.aws.amazon.com' },
+  'gitlab': { name: 'GitLab', type: 'gitlab', urlPlaceholder: 'https://gitlab.com/yourorg' },
+  'jenkins': { name: 'Jenkins', type: 'jenkins', urlPlaceholder: 'https://jenkins.yourcompany.com' },
+  'selenium-grid': { name: 'Selenium Grid', type: 'selenium-grid', urlPlaceholder: 'https://selenium.yourcompany.com' },
+  'bitbucket': { name: 'Bitbucket', type: 'bitbucket', urlPlaceholder: 'https://bitbucket.org/yourworkspace' },
 };
 
 export default function SettingsPage() {
