@@ -61,11 +61,11 @@ interface NotificationChannel {
 
 /* ─── mock state ─── */
 const initialIntegrations: Integration[] = [
-  { id: '1', name: 'Azure DevOps', type: 'azure-devops', url: 'https://dev.azure.com/myorg', authType: 'pat', authLabel: 'Personal Access Token (PAT)', authPlaceholder: 'Enter your Azure DevOps PAT', token: '', status: 'connected', lastSync: '2026-03-08 09:14' },
-  { id: '2', name: 'Jira Cloud', type: 'jira', url: 'https://myteam.atlassian.net', authType: 'api-key', authLabel: 'API Token', authPlaceholder: 'Enter your Atlassian API token', token: '', status: 'disconnected' },
-  { id: '3', name: 'SonarQube', type: 'sonarqube', url: 'https://sonar.internal.com', authType: 'api-key', authLabel: 'API Key / Token', authPlaceholder: 'Enter your SonarQube token', token: '', status: 'connected', lastSync: '2026-03-08 08:30' },
-  { id: '4', name: 'GitHub', type: 'github', url: 'https://github.com/myorg', authType: 'pat', authLabel: 'Personal Access Token (PAT)', authPlaceholder: 'Enter your GitHub PAT (classic or fine-grained)', token: '', status: 'disconnected' },
-  { id: '5', name: 'AWS', type: 'aws', url: 'https://console.aws.amazon.com', authType: 'api-key', authLabel: 'Access Key ID / Secret', authPlaceholder: 'Enter your AWS Access Key ID', token: '', status: 'disconnected' },
+  { id: '1', name: 'Azure DevOps', type: 'azure-devops', url: 'https://dev.azure.com/myorg', status: 'connected', lastSync: '2026-03-08 09:14' },
+  { id: '2', name: 'Jira Cloud', type: 'jira', url: 'https://myteam.atlassian.net', status: 'disconnected' },
+  { id: '3', name: 'SonarQube', type: 'sonarqube', url: 'https://sonar.internal.com', status: 'connected', lastSync: '2026-03-08 08:30' },
+  { id: '4', name: 'GitHub', type: 'github', url: 'https://github.com/myorg', status: 'disconnected' },
+  { id: '5', name: 'AWS', type: 'aws', url: 'https://console.aws.amazon.com', status: 'disconnected' },
 ];
 
 const initialProviders: AIProvider[] = [
