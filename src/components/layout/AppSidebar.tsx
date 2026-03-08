@@ -12,6 +12,7 @@ import {
   Settings,
   Zap,
   Clock,
+  BookOpen,
 } from 'lucide-react';
 
 const navItems = [
