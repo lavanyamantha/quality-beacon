@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useBranding } from '@/contexts/BrandingContext';
 import {
   Settings, Link2, Bot, Server, Users, Palette, Bell, Database, Shield,
   ChevronLeft, Plus, Trash2, Save, Eye, EyeOff, ToggleLeft, ToggleRight,
@@ -140,11 +141,8 @@ export default function SettingsPage() {
     cohere: ['command-r-plus', 'command-r', 'command-light'],
   };
 
-  // branding state
-  const [brandName, setBrandName] = useState('AI QA Command Center');
-  const [brandTheme, setBrandTheme] = useState('dark');
-  const [brandLogo, setBrandLogo] = useState<string | null>(null);
-  const [brandLogoName, setBrandLogoName] = useState<string | null>(null);
+  // branding state (from shared context)
+  const { brandName, setBrandName, brandTheme, setBrandTheme, brandLogo, setBrandLogo, brandLogoName, setBrandLogoName } = useBranding();
 
   // governance state
   const { aiMode: decisionMode, setAiMode: setDecisionMode } = useDemoMode();

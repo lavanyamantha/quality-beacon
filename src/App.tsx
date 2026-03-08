@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { DemoModeProvider } from "./contexts/DemoModeContext";
 import { ReleaseProvider } from "./contexts/ReleaseContext";
+import { BrandingProvider } from "./contexts/BrandingContext";
 import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Index";
 import ReleaseAdvisorPage from "./pages/ReleaseAdvisorPage";
@@ -28,6 +29,7 @@ const App = () => (
     <TooltipProvider>
       <DemoModeProvider>
         <ReleaseProvider>
+        <BrandingProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -50,6 +52,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
+        </BrandingProvider>
         </ReleaseProvider>
       </DemoModeProvider>
     </TooltipProvider>

@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useBranding } from '@/contexts/BrandingContext';
 import {
   LayoutDashboard,
   Activity,
@@ -35,17 +36,22 @@ const navItems = [
 export default function AppSidebar() {
   const location = useLocation();
   const { demoMode } = useDemoMode();
+  const { brandName, brandLogo } = useBranding();
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-60 bg-sidebar border-r border-sidebar-border flex flex-col z-50">
       <div className="p-5 border-b border-sidebar-border">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center glow-primary" style={{ background: 'var(--gradient-primary)' }}>
-            <Cpu className="w-4.5 h-4.5 text-primary-foreground" size={18} />
-          </div>
+          {brandLogo ? (
+            <img src={brandLogo} alt="Logo" className="w-8 h-8 rounded-lg object-contain" />
+          ) : (
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center glow-primary" style={{ background: 'var(--gradient-primary)' }}>
+              <Cpu className="w-4.5 h-4.5 text-primary-foreground" size={18} />
+            </div>
+          )}
           <div>
-            <h1 className="text-sm font-bold text-foreground leading-tight">AI QA Command</h1>
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Center</p>
+            <h1 className="text-sm font-bold text-foreground leading-tight">{brandName.length > 16 ? brandName.slice(0, 16) : brandName}</h1>
+            {brandName.length > 16 && <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">{brandName.slice(16).trim()}</p>}
           </div>
         </div>
       </div>
