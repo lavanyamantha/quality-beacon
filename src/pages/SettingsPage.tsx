@@ -154,6 +154,13 @@ export default function SettingsPage() {
   const [riskThreshold, setRiskThreshold] = useState('70');
   const [failureThreshold, setFailureThreshold] = useState('3');
 
+  // add channel dialog state
+  const [addChannelDialogOpen, setAddChannelDialogOpen] = useState(false);
+  const [newChannelType, setNewChannelType] = useState<'slack' | 'teams' | 'email'>('slack');
+  const [newChannelTarget, setNewChannelTarget] = useState('');
+  const [newChannelWebhook, setNewChannelWebhook] = useState('');
+  const [testingWebhook, setTestingWebhook] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
+
   const handleSave = (section: string) => {
     toast({ title: 'Settings saved', description: `${section} configuration updated successfully.` });
   };
