@@ -1,5 +1,7 @@
 import { defects, defectsByRelease } from '@/data/mockData';
 import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 
 const severityBg: Record<string, string> = {
   critical: 'bg-destructive/10 text-destructive',

@@ -1,8 +1,12 @@
 import { flakyTests } from '@/data/mockData';
 import { motion } from 'framer-motion';
 import { Zap } from 'lucide-react';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 
 export default function FlakyTestsPage() {
+  const { demoMode } = useDemoMode();
+  if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Flaky Test Detection</h1><p className="text-sm text-muted-foreground mt-0.5">Identify and track unreliable tests across pipelines</p></div><NoDataPlaceholder title="Flaky Tests" /></div>);
   const sorted = [...flakyTests].sort((a, b) => b.flakinessScore - a.flakinessScore);
 
   return (
