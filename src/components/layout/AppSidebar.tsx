@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useBranding } from '@/contexts/BrandingContext';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   LayoutDashboard,
   Activity,
@@ -31,7 +32,7 @@ const navItems = [
   { to: '/risk', icon: BarChart3, label: 'Risk Prediction' },
   { to: '/ai-assistant', icon: Cpu, label: 'QA Assistant' },
   { to: '/docs', icon: BookOpen, label: 'Documentation' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
+  { to: '/settings', icon: Settings, label: 'Settings', adminOnly: true },
 ];
 
 interface AppSidebarProps {
