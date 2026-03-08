@@ -1,7 +1,10 @@
-import { flakyTests } from '@/data/mockData';
+import { useRelease } from '@/contexts/ReleaseContext';
+import { getFlakyTestsForRelease } from '@/data/releaseDataHelper';
 import { Zap } from 'lucide-react';
 
 export default function FlakyTestCard() {
+  const { activeRelease } = useRelease();
+  const flakyTests = getFlakyTestsForRelease(activeRelease);
   const sorted = [...flakyTests].sort((a, b) => b.flakinessScore - a.flakinessScore);
 
   return (

@@ -1,9 +1,18 @@
 import { Bell, Search } from 'lucide-react';
-import { currentRelease } from '@/data/mockData';
 import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useRelease } from '@/contexts/ReleaseContext';
+import { Badge } from '@/components/ui/badge';
+
+const statusStyle: Record<string, string> = {
+  released: 'bg-success/20 text-success',
+  ready: 'bg-primary/20 text-primary',
+  risk: 'bg-warning/20 text-warning',
+  blocked: 'bg-destructive/20 text-destructive',
+};
 
 export default function TopBar() {
   const { demoMode } = useDemoMode();
+  const { activeRelease, selectedEnv } = useRelease();
 
   return (
     <header className="h-14 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-6 sticky top-0 z-40">
@@ -12,13 +21,13 @@ export default function TopBar() {
           <>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-secondary text-secondary-foreground">
               <span className="text-xs font-medium">Release:</span>
-              <span className="text-xs font-bold text-primary">{currentRelease.version}</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-warning/20 text-warning uppercase">
-                {currentRelease.status}
-              </span>
+              <span className="text-xs font-bold text-primary">{activeRelease.version}</span>
+              <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${statusStyle[activeRelease.status]}`}>
+                {activeRelease.status}
+              </Badge>
             </div>
             <div className="text-xs text-muted-foreground">
-              Env: <span className="font-medium text-foreground">{currentRelease.environment}</span>
+              Env: <span className="font-medium text-foreground">{selectedEnv === 'All' ? activeRelease.environment : selectedEnv}</span>
             </div>
           </>
         ) : (

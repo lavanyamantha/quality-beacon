@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { currentRelease, readinessMetrics } from '@/data/mockData';
+import { useRelease } from '@/contexts/ReleaseContext';
+import { getReadinessForRelease } from '@/data/releaseDataHelper';
 
 function getScoreColor(score: number) {
   if (score >= 90) return 'hsl(var(--success))';
@@ -14,7 +15,8 @@ function getStatusLabel(score: number) {
 }
 
 export default function ReadinessGauge() {
-  const score = currentRelease.readinessScore;
+  const { activeRelease } = useRelease();
+  const { score, metrics: readinessMetrics } = getReadinessForRelease(activeRelease);
   const color = getScoreColor(score);
   const circumference = 2 * Math.PI * 70;
   const dashOffset = circumference - (score / 100) * circumference;
@@ -29,7 +31,7 @@ export default function ReadinessGauge() {
     <div className="dashboard-card col-span-2">
       <div className="dashboard-card-header">
         <span className="dashboard-card-title">Release Readiness</span>
-        <span className="text-xs font-mono text-muted-foreground">{currentRelease.version}</span>
+        <span className="text-xs font-mono text-muted-foreground">{activeRelease.version}</span>
       </div>
       
       <div className="flex items-center gap-8">
@@ -37,6 +39,7 @@ export default function ReadinessGauge() {
           <svg width="160" height="160" className="score-gauge -rotate-90">
             <circle cx="80" cy="80" r="70" fill="none" stroke="hsl(var(--border))" strokeWidth="8" />
             <motion.circle
+              key={score}
               cx="80" cy="80" r="70"
               fill="none"
               stroke={color}
@@ -50,6 +53,7 @@ export default function ReadinessGauge() {
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <motion.span
+              key={score}
               className="text-4xl font-bold"
               style={{ color }}
               initial={{ opacity: 0 }}

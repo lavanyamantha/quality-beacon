@@ -1,4 +1,5 @@
-import { pipelines } from '@/data/mockData';
+import { useRelease } from '@/contexts/ReleaseContext';
+import { getPipelinesForRelease } from '@/data/releaseDataHelper';
 import { GitBranch, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
 const statusIcon = {
@@ -8,6 +9,8 @@ const statusIcon = {
 };
 
 export default function PipelineStatusCard() {
+  const { activeRelease } = useRelease();
+  const pipelines = getPipelinesForRelease(activeRelease);
   const passing = pipelines.filter(p => p.status === 'passing').length;
 
   return (

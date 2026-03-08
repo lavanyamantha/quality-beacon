@@ -1,7 +1,11 @@
-import { readinessTrend } from '@/data/mockData';
+import { useRelease } from '@/contexts/ReleaseContext';
+import { getReadinessTrendForRelease } from '@/data/releaseDataHelper';
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, ReferenceLine } from 'recharts';
 
 export default function ReadinessTrendCard() {
+  const { activeRelease } = useRelease();
+  const trendData = getReadinessTrendForRelease(activeRelease);
+
   return (
     <div className="dashboard-card">
       <div className="dashboard-card-header">
@@ -10,7 +14,7 @@ export default function ReadinessTrendCard() {
 
       <div className="h-36">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={readinessTrend}>
+          <LineChart data={trendData}>
             <XAxis dataKey="release" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
             <YAxis domain={[40, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={30} />
             <Tooltip

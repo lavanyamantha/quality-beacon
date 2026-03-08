@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useRelease } from '@/contexts/ReleaseContext';
 import ReadinessGauge from '@/components/dashboard/ReadinessGauge';
 import AIAdvisorCard from '@/components/dashboard/AIAdvisorCard';
 import ServiceHealthGrid from '@/components/dashboard/ServiceHealthGrid';
@@ -47,10 +47,7 @@ const statusColor: Record<string, string> = {
 
 export default function Dashboard() {
   const { demoMode } = useDemoMode();
-  const [selectedRelease, setSelectedRelease] = useState(releases.find(r => r.status === 'risk')?.id || releases[0].id);
-  const [selectedEnv, setSelectedEnv] = useState('All');
-
-  const activeRelease = releases.find(r => r.id === selectedRelease) || releases[0];
+  const { selectedReleaseId, selectedEnv, setSelectedReleaseId, setSelectedEnv, activeRelease } = useRelease();
 
   if (!demoMode) {
     return (
@@ -74,7 +71,7 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Select value={selectedRelease} onValueChange={setSelectedRelease}>
+          <Select value={selectedReleaseId} onValueChange={setSelectedReleaseId}>
             <SelectTrigger className="w-[200px] h-9 text-xs">
               <SelectValue placeholder="Select Release" />
             </SelectTrigger>
