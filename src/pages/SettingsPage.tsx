@@ -106,6 +106,7 @@ const availableProviders: Record<string, { name: string; type: string; urlPlaceh
   'gitlab': { name: 'GitLab', type: 'gitlab', urlPlaceholder: 'https://gitlab.com/yourorg', authType: 'pat', authLabel: 'Personal Access Token', authPlaceholder: 'Enter your GitLab PAT', helpText: 'GitLab → Preferences → Access Tokens' },
   'jenkins': { name: 'Jenkins', type: 'jenkins', urlPlaceholder: 'https://jenkins.yourcompany.com', authType: 'api-key', authLabel: 'API Token', authPlaceholder: 'Enter your Jenkins API token', helpText: 'Jenkins → User → Configure → API Token' },
   'selenium-grid': { name: 'Selenium Grid', type: 'selenium-grid', urlPlaceholder: 'https://selenium.yourcompany.com', authType: 'api-key', authLabel: 'Access Token', authPlaceholder: 'Enter access token (if required)', helpText: 'Selenium Grid Hub URL with optional auth' },
+  'bitbucket': { name: 'Bitbucket', type: 'bitbucket', urlPlaceholder: 'https://bitbucket.org/yourworkspace', authType: 'pat', authLabel: 'App Password', authPlaceholder: 'Enter your Bitbucket app password', helpText: 'Bitbucket → Personal Settings → App Passwords' },
 };
 
 export default function SettingsPage() {
