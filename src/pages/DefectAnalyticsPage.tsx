@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRelease } from '@/contexts/ReleaseContext';
 import { getDefectsForRelease, getDefectsByReleaseForRelease } from '@/data/releaseDataHelper';
 import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useIntegrations } from '@/contexts/IntegrationsContext';
 import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 import ReleaseCompareSelector from '@/components/ReleaseCompareSelector';
 import { Release } from '@/data/mockData';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, ExternalLink } from 'lucide-react';
 
 const severityBg: Record<string, string> = {
   critical: 'bg-destructive/10 text-destructive',
@@ -26,7 +27,52 @@ const statusBg: Record<string, string> = {
 export default function DefectAnalyticsPage() {
   const { demoMode } = useDemoMode();
   const { activeRelease } = useRelease();
+  const { integrations } = useIntegrations();
   const [compareRelease, setCompareRelease] = useState<Release | null>(null);
+
+  // Find connected defect source for deep-linking
+  const defectSource = integrations.find(i => i.provides.includes('defect') && i.status === 'connected');
+
+  const buildDefectUrl = useCallback((defectId: string) => {
+    if (!defectSource?.url) return null;
+    const baseUrl = defectSource.url.replace(/\/+$/, '');
+    switch (defectSource.type) {
+      case 'jira':
+        return `${baseUrl}/browse/${defectId}`;
+      case 'azure-devops':
+        return `${baseUrl}/_workitems/edit/${defectId.replace(/\D/g, '')}`;
+      case 'github':
+        return `${baseUrl}/issues?q=${encodeURIComponent(defectId)}`;
+      case 'gitlab':
+        return `${baseUrl}/-/issues?search=${encodeURIComponent(defectId)}`;
+      default:
+        return null;
+    }
+  }, [defectSource]);
+
+  const buildQueryUrl = useCallback((filter: { severity?: string; status?: string }) => {
+    if (!defectSource?.url) return null;
+    const baseUrl = defectSource.url.replace(/\/+$/, '');
+    switch (defectSource.type) {
+      case 'jira': {
+        const jql = [
+          filter.severity ? `priority = "${filter.severity}"` : '',
+          filter.status ? `status = "${filter.status}"` : '',
+        ].filter(Boolean).join(' AND ');
+        return `${baseUrl}/issues/?jql=${encodeURIComponent(jql)}`;
+      }
+      case 'azure-devops': {
+        const wiql = [
+          '[System.WorkItemType] = "Bug"',
+          filter.severity ? `[Microsoft.VSTS.Common.Severity] = "${filter.severity}"` : '',
+          filter.status ? `[System.State] = "${filter.status}"` : '',
+        ].filter(Boolean).join(' AND ');
+        return `${baseUrl}/_queries?wiql=${encodeURIComponent(wiql)}`;
+      }
+      default:
+        return null;
+    }
+  }, [defectSource]);
 
   if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Defect Analytics</h1><p className="text-sm text-muted-foreground mt-0.5">Track and analyze defects across releases</p></div><NoDataPlaceholder title="Defect Analytics" /></div>);
 
@@ -76,13 +122,14 @@ export default function DefectAnalyticsPage() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-4 gap-4">
-        <MetricCard label="Total Defects" value={defects.length} compare={compareDefects?.length} invertDelta />
-        <MetricCard label="Critical" value={criticalCount} compare={compareCritical} invertDelta color="text-destructive" />
-        <MetricCard label="Open" value={openCount} compare={compareOpen} invertDelta color="text-warning" />
+        <MetricCard label="Total Defects" value={defects.length} compare={compareDefects?.length} invertDelta href={buildQueryUrl({})} />
+        <MetricCard label="Critical" value={criticalCount} compare={compareCritical} invertDelta color="text-destructive" href={buildQueryUrl({ severity: 'critical' })} />
+        <MetricCard label="Open" value={openCount} compare={compareOpen} invertDelta color="text-warning" href={buildQueryUrl({ status: 'open' })} />
         <MetricCard
           label="Resolution Rate"
           value={`${Math.round((defects.filter(d => d.status === 'resolved' || d.status === 'closed').length / defects.length) * 100)}%`}
           color="text-success"
+          href={buildQueryUrl({ status: 'resolved' })}
         />
       </div>
 
@@ -146,7 +193,15 @@ export default function DefectAnalyticsPage() {
           <tbody>
             {defects.map(d => (
               <tr key={d.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
-                <td className="py-2.5 text-xs font-mono text-primary">{d.id}</td>
+                <td className="py-2.5 text-xs font-mono">
+                  {buildDefectUrl(d.id) ? (
+                    <a href={buildDefectUrl(d.id)!} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+                      {d.id} <ExternalLink size={10} />
+                    </a>
+                  ) : (
+                    <span className="text-primary">{d.id}</span>
+                  )}
+                </td>
                 <td className="py-2.5 text-sm text-foreground">{d.title}</td>
                 <td className="py-2.5"><span className={`text-[10px] font-medium uppercase px-2 py-0.5 rounded-full ${severityBg[d.severity]}`}>{d.severity}</span></td>
                 <td className="py-2.5"><span className={`text-[10px] font-medium uppercase px-2 py-0.5 rounded-full ${statusBg[d.status]}`}>{d.status}</span></td>
@@ -161,8 +216,8 @@ export default function DefectAnalyticsPage() {
   );
 }
 
-function MetricCard({ label, value, compare, invertDelta, color = 'text-foreground' }: {
-  label: string; value: number | string; compare?: number | null; invertDelta?: boolean; color?: string;
+function MetricCard({ label, value, compare, invertDelta, color = 'text-foreground', href }: {
+  label: string; value: number | string; compare?: number | null; invertDelta?: boolean; color?: string; href?: string | null;
 }) {
   const numVal = typeof value === 'number' ? value : null;
   const delta = numVal !== null && compare !== null && compare !== undefined && compare !== 0
@@ -172,16 +227,29 @@ function MetricCard({ label, value, compare, invertDelta, color = 'text-foregrou
   const DeltaIcon = isGood ? TrendingDown : isBad ? TrendingUp : Minus;
   const deltaColor = isGood ? 'text-success' : isBad ? 'text-destructive' : 'text-muted-foreground';
 
-  return (
-    <div className="dashboard-card">
+  const content = (
+    <>
       <p className="metric-label">{label}</p>
-      <p className={`metric-value ${color}`}>{value}</p>
+      <p className={`metric-value ${color} ${href ? 'group-hover:underline' : ''}`}>
+        {value}
+        {href && <ExternalLink size={12} className="inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />}
+      </p>
       {delta !== null && (
         <div className={`flex items-center gap-1 mt-1 ${deltaColor}`}>
           <DeltaIcon size={10} />
           <span className="text-[10px] font-medium">{delta > 0 ? '+' : ''}{delta.toFixed(0)}%</span>
         </div>
       )}
-    </div>
+    </>
   );
+
+  if (href) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className="dashboard-card group cursor-pointer hover:border-primary/30 transition-colors">
+        {content}
+      </a>
+    );
+  }
+
+  return <div className="dashboard-card">{content}</div>;
 }
