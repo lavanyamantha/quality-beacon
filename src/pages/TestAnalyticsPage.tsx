@@ -1,24 +1,28 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRelease } from '@/contexts/ReleaseContext';
 import { getTestExecutionsForRelease } from '@/data/releaseDataHelper';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar, Legend } from 'recharts';
 import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useIntegrations } from '@/contexts/IntegrationsContext';
 import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 import ReleaseCompareSelector from '@/components/ReleaseCompareSelector';
 import { Release } from '@/data/mockData';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, ExternalLink } from 'lucide-react';
 
-function StatCard({ label, value, color = 'text-foreground', delta, deltaLabel }: {
-  label: string; value: string; color?: string; delta?: number; deltaLabel?: string;
+function StatCard({ label, value, color = 'text-foreground', delta, deltaLabel, href }: {
+  label: string; value: string; color?: string; delta?: number; deltaLabel?: string; href?: string | null;
 }) {
   const DeltaIcon = delta && delta > 0 ? TrendingUp : delta && delta < 0 ? TrendingDown : Minus;
   const deltaColor = delta && delta > 0 ? 'text-success' : delta && delta < 0 ? 'text-destructive' : 'text-muted-foreground';
 
-  return (
-    <div className="dashboard-card">
+  const content = (
+    <>
       <p className="metric-label">{label}</p>
-      <p className={`metric-value ${color}`}>{value}</p>
+      <p className={`metric-value ${color} ${href ? 'group-hover:underline' : ''}`}>
+        {value}
+        {href && <ExternalLink size={12} className="inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />}
+      </p>
       {delta !== undefined && (
         <div className={`flex items-center gap-1 mt-1 ${deltaColor}`}>
           <DeltaIcon size={10} />
@@ -27,8 +31,18 @@ function StatCard({ label, value, color = 'text-foreground', delta, deltaLabel }
           </span>
         </div>
       )}
-    </div>
+    </>
   );
+
+  if (href) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className="dashboard-card group cursor-pointer hover:border-primary/30 transition-colors">
+        {content}
+      </a>
+    );
+  }
+
+  return <div className="dashboard-card">{content}</div>;
 }
 
 export default function TestAnalyticsPage() {
