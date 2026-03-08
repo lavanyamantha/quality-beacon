@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRelease } from '@/contexts/ReleaseContext';
 import { getDefectsForRelease, getDefectsByReleaseForRelease } from '@/data/releaseDataHelper';
 import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useIntegrations } from '@/contexts/IntegrationsContext';
 import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 import ReleaseCompareSelector from '@/components/ReleaseCompareSelector';
 import { Release } from '@/data/mockData';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, ExternalLink } from 'lucide-react';
 
 const severityBg: Record<string, string> = {
   critical: 'bg-destructive/10 text-destructive',
