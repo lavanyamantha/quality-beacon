@@ -35,18 +35,18 @@ function RiskLegend() {
     { label: 'Low (<20%)', color: severityColors.low, desc: 'Acceptable' },
   ];
   return (
-    <div className="dashboard-card">
+    <div className="dashboard-card overflow-hidden">
       <div className="flex items-center gap-2 mb-3">
-        <Info size={14} className="text-muted-foreground" />
+        <Info size={14} className="text-muted-foreground flex-shrink-0" />
         <span className="text-xs font-semibold text-foreground">Risk Level Legend</span>
       </div>
       <div className="space-y-1.5">
         {levels.map(l => (
-          <div key={l.label} className="flex items-center gap-2 text-xs">
+          <div key={l.label} className="flex items-center gap-2 text-xs min-w-0">
             <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: l.color }} />
-            <span className="text-muted-foreground whitespace-nowrap">{l.label}</span>
-            <span className="border-b border-dotted border-border flex-1 min-w-2" />
-            <span className="text-foreground font-medium whitespace-nowrap">{l.desc}</span>
+            <span className="text-muted-foreground truncate">{l.label}</span>
+            <span className="border-b border-dotted border-border flex-1 min-w-1" />
+            <span className="text-foreground font-medium flex-shrink-0">{l.desc}</span>
           </div>
         ))}
       </div>
