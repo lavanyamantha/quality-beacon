@@ -3,7 +3,7 @@ import { useDemoMode } from '@/contexts/DemoModeContext';
 import {
   Settings, Link2, Bot, Server, Users, Palette, Bell, Database, Shield,
   ChevronLeft, Plus, Trash2, Save, Eye, EyeOff, ToggleLeft, ToggleRight,
-  Check, AlertTriangle
+  Check, AlertTriangle, Loader2, Wifi, WifiOff
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -98,6 +98,7 @@ export default function SettingsPage() {
   const [channels, setChannels] = useState(initialChannels);
   const { demoMode, setDemoMode } = useDemoMode();
   const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({});
+  const [testingConnection, setTestingConnection] = useState<Record<string, 'idle' | 'testing' | 'success' | 'failed'>>({});
 
   // branding state
   const [brandName, setBrandName] = useState('AI QA Command Center');
@@ -114,6 +115,26 @@ export default function SettingsPage() {
 
   const handleSave = (section: string) => {
     toast({ title: 'Settings saved', description: `${section} configuration updated successfully.` });
+  };
+
+  const handleTestConnection = (int: Integration) => {
+    setTestingConnection(prev => ({ ...prev, [int.id]: 'testing' }));
+    // Simulate a connection test with a delay
+    setTimeout(() => {
+      const success = int.status === 'connected';
+      setTestingConnection(prev => ({ ...prev, [int.id]: success ? 'success' : 'failed' }));
+      toast({
+        title: success ? 'Connection Successful' : 'Connection Failed',
+        description: success
+          ? `${int.name} responded successfully.`
+          : `Unable to reach ${int.name}. Please verify the URL and credentials.`,
+        variant: success ? undefined : 'destructive',
+      });
+      // Reset after a few seconds
+      setTimeout(() => {
+        setTestingConnection(prev => ({ ...prev, [int.id]: 'idle' }));
+      }, 4000);
+    }, 2000);
   };
 
   const toggleApiKeyVisibility = (id: string) => {
@@ -141,6 +162,22 @@ export default function SettingsPage() {
               <div className="flex gap-2">
                 <Button
                   size="sm"
+                  variant="outline"
+                  disabled={int.status !== 'connected' || testingConnection[int.id] === 'testing'}
+                  onClick={() => handleTestConnection(int)}
+                >
+                  {testingConnection[int.id] === 'testing' ? (
+                    <><Loader2 size={14} className="mr-1 animate-spin" /> Testing…</>
+                  ) : testingConnection[int.id] === 'success' ? (
+                    <><Wifi size={14} className="mr-1 text-success" /> Passed</>
+                  ) : testingConnection[int.id] === 'failed' ? (
+                    <><WifiOff size={14} className="mr-1 text-destructive" /> Failed</>
+                  ) : (
+                    <><Wifi size={14} className="mr-1" /> Test Connection</>
+                  )}
+                </Button>
+                <Button
+                  size="sm"
                   variant={int.status === 'connected' ? 'outline' : 'default'}
                   onClick={() => {
                     setIntegrations(prev => prev.map(i => i.id === int.id ? { ...i, status: i.status === 'connected' ? 'disconnected' : 'connected', lastSync: i.status !== 'connected' ? new Date().toISOString().slice(0, 16).replace('T', ' ') : i.lastSync } : i));
@@ -151,6 +188,17 @@ export default function SettingsPage() {
                 </Button>
               </div>
             </div>
+            {/* Inline test result alert */}
+            {testingConnection[int.id] === 'success' && (
+              <div className="mb-3 flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+                <Check size={14} /> Connection to {int.name} verified successfully.
+              </div>
+            )}
+            {testingConnection[int.id] === 'failed' && (
+              <div className="mb-3 flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <AlertTriangle size={14} /> Failed to reach {int.name}. Check URL and credentials.
+              </div>
+            )}
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs text-muted-foreground">URL</Label>
