@@ -168,12 +168,91 @@ export function getTimelineForRelease(release: Release) {
   }));
 }
 
-export function getRiskDataForRelease(release: Release, env: string) {
+export interface RiskFactor {
+  label: string;
+  contribution: number;
+  detail: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+}
+
+export interface ServiceRisk {
+  name: string;
+  risk: number;
+  riskLevel: 'critical' | 'high' | 'medium' | 'low';
+  factors: RiskFactor[];
+  trend: 'increasing' | 'stable' | 'decreasing';
+  recommendation: string;
+}
+
+export function getRiskDataForRelease(release: Release, env: string): ServiceRisk[] {
   const services = getMicroservicesForRelease(release, env);
-  return services.map(s => ({
-    name: s.name,
-    risk: Math.round((s.errorRate * 10 + s.defectDensity * 12 + (100 - s.coverage) * 0.5 + (s.health === 'down' ? 30 : s.health === 'degraded' ? 15 : 0))),
-  })).sort((a, b) => b.risk - a.risk);
+  return services.map(s => {
+    const errorContrib = Math.round(s.errorRate * 10);
+    const defectContrib = Math.round(s.defectDensity * 12);
+    const coverageContrib = Math.round((100 - s.coverage) * 0.5);
+    const healthContrib = s.health === 'down' ? 30 : s.health === 'degraded' ? 15 : 0;
+    const risk = Math.min(100, errorContrib + defectContrib + coverageContrib + healthContrib);
+
+    const factors: RiskFactor[] = [];
+
+    if (errorContrib > 0) factors.push({
+      label: 'Error Rate',
+      contribution: errorContrib,
+      detail: `${s.errorRate}% error rate detected in ${env} environment`,
+      severity: s.errorRate > 3 ? 'critical' : s.errorRate > 1.5 ? 'high' : s.errorRate > 0.5 ? 'medium' : 'low',
+    });
+
+    if (defectContrib > 0) factors.push({
+      label: 'Defect Density',
+      contribution: defectContrib,
+      detail: `${s.defectDensity} defects per KLOC — ${s.defectDensity > 3 ? 'significantly above' : s.defectDensity > 1.5 ? 'above' : 'within'} acceptable threshold`,
+      severity: s.defectDensity > 3 ? 'critical' : s.defectDensity > 1.5 ? 'high' : s.defectDensity > 0.5 ? 'medium' : 'low',
+    });
+
+    if (coverageContrib > 5) factors.push({
+      label: 'Low Test Coverage',
+      contribution: coverageContrib,
+      detail: `${s.coverage}% coverage — ${100 - s.coverage}% of code paths untested`,
+      severity: s.coverage < 50 ? 'critical' : s.coverage < 70 ? 'high' : s.coverage < 85 ? 'medium' : 'low',
+    });
+
+    if (healthContrib > 0) factors.push({
+      label: 'Service Health',
+      contribution: healthContrib,
+      detail: `Service is ${s.health} — ${s.health === 'down' ? 'complete outage detected' : 'intermittent failures observed'}`,
+      severity: s.health === 'down' ? 'critical' : 'high',
+    });
+
+    if (s.pipelineStatus !== 'passing') factors.push({
+      label: 'Pipeline Instability',
+      contribution: 5,
+      detail: `CI/CD pipeline is ${s.pipelineStatus} — builds may be unreliable`,
+      severity: s.pipelineStatus === 'failing' ? 'high' : 'medium',
+    });
+
+    factors.sort((a, b) => b.contribution - a.contribution);
+
+    const riskLevel = risk > 60 ? 'critical' : risk > 40 ? 'high' : risk > 20 ? 'medium' : 'low';
+
+    const recommendations: Record<string, string> = {
+      critical: 'Block release — critical issues must be resolved before deployment',
+      high: 'Escalate to engineering lead — targeted fixes needed before go-live',
+      medium: 'Monitor closely — consider additional test coverage before release',
+      low: 'Acceptable risk — proceed with standard release checks',
+    };
+
+    const trends: Array<'increasing' | 'stable' | 'decreasing'> = ['increasing', 'stable', 'decreasing', 'stable'];
+    const trendIdx = (s.name.length + (release.id.length % 3)) % trends.length;
+
+    return {
+      name: s.name,
+      risk,
+      riskLevel,
+      factors,
+      trend: trends[trendIdx],
+      recommendation: recommendations[riskLevel],
+    };
+  }).sort((a, b) => b.risk - a.risk);
 }
 
 export function getDefectsByReleaseForRelease(release: Release) {
