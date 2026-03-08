@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Bot, Send } from 'lucide-react';
+import { Bot, Send, ShieldOff, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -18,11 +20,12 @@ function getResponse(input: string): string {
   const lower = input.toLowerCase();
   if (lower.includes('risk') || lower.includes('ready') || lower.includes('release')) return mockResponses['risk'];
   if (lower.includes('flaky') || lower.includes('unstable')) return mockResponses['flaky'];
-  if (lower.includes('coverage') || lower.includes('coverage')) return mockResponses['coverage'];
+  if (lower.includes('coverage')) return mockResponses['coverage'];
   return mockResponses['default'];
 }
 
 export default function QAAssistantPage() {
+  const { aiMode } = useDemoMode();
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: "Hello! I'm your QA AI Assistant. Ask me about release readiness, flaky tests, coverage gaps, or service health." },
   ]);
@@ -35,6 +38,29 @@ export default function QAAssistantPage() {
     setMessages(prev => [...prev, userMsg, assistantMsg]);
     setInput('');
   };
+
+  if (aiMode === 'disabled') {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center max-w-md mx-auto">
+        <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mb-4">
+          <ShieldOff size={28} className="text-destructive" />
+        </div>
+        <h2 className="text-lg font-semibold text-foreground mb-2">AI Features Disabled</h2>
+        <p className="text-sm text-muted-foreground mb-2">
+          The QA AI Assistant is currently disabled by your organization's governance policy.
+        </p>
+        <p className="text-sm text-muted-foreground mb-6">
+          An administrator can re-enable AI features by navigating to <strong>Settings → Governance</strong> and switching the AI Decision Mode to <strong>"Decision Support"</strong> or <strong>"Autonomous"</strong>.
+        </p>
+        <Link
+          to="/settings"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+        >
+          <Settings size={14} /> Go to Settings
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] max-w-3xl">
