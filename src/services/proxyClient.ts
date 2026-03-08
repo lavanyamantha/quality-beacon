@@ -70,3 +70,44 @@ export async function proxyHealthCheck(
   const response = await fetch(`${PROXY_URL}/api/proxy/${integrationType}/health${params}`);
   return response.json();
 }
+
+/* ─── Settings persistence via proxy ─── */
+
+function getAuthHeaders(): Record<string, string> {
+  const token = localStorage.getItem('qa-dashboard-token');
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+}
+
+/**
+ * Fetch all settings from the proxy server.
+ */
+export async function fetchSettings(): Promise<Record<string, any>> {
+  const response = await fetch(`${PROXY_URL}/api/settings`, { headers: getAuthHeaders() });
+  if (!response.ok) throw new Error(`Failed to fetch settings: ${response.status}`);
+  return response.json();
+}
+
+/**
+ * Fetch a specific settings section from the proxy.
+ */
+export async function fetchSettingsSection(section: string): Promise<any> {
+  const response = await fetch(`${PROXY_URL}/api/settings/${section}`, { headers: getAuthHeaders() });
+  if (!response.ok) throw new Error(`Failed to fetch settings/${section}: ${response.status}`);
+  const result = await response.json();
+  return result[section];
+}
+
+/**
+ * Save a settings section to the proxy server.
+ */
+export async function saveSettingsSection(section: string, data: any): Promise<{ ok: boolean }> {
+  const response = await fetch(`${PROXY_URL}/api/settings/${section}`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ data }),
+  });
+  if (!response.ok) throw new Error(`Failed to save settings/${section}: ${response.status}`);
+  return response.json();
+}
