@@ -52,7 +52,7 @@ const statusColor: Record<string, string> = {
 };
 
 export default function Dashboard() {
-  const { demoMode } = useDemoMode();
+  const { demoMode, aiMode } = useDemoMode();
   const { selectedReleaseId, selectedEnv, setSelectedReleaseId, setSelectedEnv, activeRelease } = useRelease();
   const { brandName } = useBranding();
   const dashboardRef = useRef<HTMLDivElement>(null);
