@@ -260,6 +260,7 @@ export default function DocumentationPage() {
           <TabsTrigger value="modules">Module Reference</TabsTrigger>
           <TabsTrigger value="scoring">Scoring Model</TabsTrigger>
           <TabsTrigger value="ai-governance">AI & Governance</TabsTrigger>
+          <TabsTrigger value="infrastructure">Infrastructure & Setup</TabsTrigger>
         </TabsList>
 
         {/* ═══ Getting Started ═══ */}
