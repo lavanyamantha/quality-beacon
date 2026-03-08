@@ -125,6 +125,21 @@ export default function SettingsPage() {
   const [newUrl, setNewUrl] = useState('');
   const [newToken, setNewToken] = useState('');
 
+  // add AI provider dialog state
+  const [addProviderDialogOpen, setAddProviderDialogOpen] = useState(false);
+  const [newAIProvider, setNewAIProvider] = useState('openai');
+  const [newAIModel, setNewAIModel] = useState('');
+  const [newAIApiKey, setNewAIApiKey] = useState('');
+
+  // known models per provider (users can also type custom ones)
+  const knownModels: Record<string, string[]> = {
+    openai: ['gpt-4o', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo', 'o1-preview', 'o1-mini'],
+    anthropic: ['claude-3.5-sonnet', 'claude-3-opus', 'claude-3-haiku', 'claude-3.5-haiku'],
+    google: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'],
+    mistral: ['mistral-large', 'mistral-medium', 'mistral-small', 'codestral'],
+    cohere: ['command-r-plus', 'command-r', 'command-light'],
+  };
+
   // branding state
   const [brandName, setBrandName] = useState('AI QA Command Center');
   const [brandTheme, setBrandTheme] = useState('dark');
