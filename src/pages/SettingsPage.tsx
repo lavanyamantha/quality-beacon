@@ -146,6 +146,8 @@ export default function SettingsPage() {
           'azure-devops': ['dev.azure.com', 'visualstudio.com'],
           'jira': ['atlassian.net'],
           'sonarqube': ['sonarqube', 'sonar'],
+          'github': ['github.com'],
+          'aws': ['amazonaws.com', 'aws.amazon.com'],
         };
         const allowed = validDomains[int.type] || [];
         const domainMatch = allowed.some(d => parsed.hostname.includes(d));
