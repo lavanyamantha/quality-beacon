@@ -143,6 +143,8 @@ export default function SettingsPage() {
   // branding state
   const [brandName, setBrandName] = useState('AI QA Command Center');
   const [brandTheme, setBrandTheme] = useState('dark');
+  const [brandLogo, setBrandLogo] = useState<string | null>(null);
+  const [brandLogoName, setBrandLogoName] = useState<string | null>(null);
 
   // governance state
   const { aiMode: decisionMode, setAiMode: setDecisionMode } = useDemoMode();
