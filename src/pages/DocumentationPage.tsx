@@ -5,7 +5,8 @@ import {
   LayoutDashboard, Activity, Bug, Zap, GitBranch, Cpu,
   Eye, Monitor, Database, Globe, Key, Layers, AlertTriangle,
   CheckCircle2, XCircle, Clock, TrendingUp, FileText, Search,
-  Workflow, Server, Gauge, Brain, MessageSquare, Target
+  Workflow, Server, Gauge, Brain, MessageSquare, Target,
+  Terminal, Network, HardDrive, ShieldCheck, Plug, Cog
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
