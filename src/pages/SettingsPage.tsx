@@ -125,6 +125,21 @@ export default function SettingsPage() {
   const [newUrl, setNewUrl] = useState('');
   const [newToken, setNewToken] = useState('');
 
+  // add AI provider dialog state
+  const [addProviderDialogOpen, setAddProviderDialogOpen] = useState(false);
+  const [newAIProvider, setNewAIProvider] = useState('openai');
+  const [newAIModel, setNewAIModel] = useState('');
+  const [newAIApiKey, setNewAIApiKey] = useState('');
+
+  // known models per provider (users can also type custom ones)
+  const knownModels: Record<string, string[]> = {
+    openai: ['gpt-4o', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo', 'o1-preview', 'o1-mini'],
+    anthropic: ['claude-3.5-sonnet', 'claude-3-opus', 'claude-3-haiku', 'claude-3.5-haiku'],
+    google: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'],
+    mistral: ['mistral-large', 'mistral-medium', 'mistral-small', 'codestral'],
+    cohere: ['command-r-plus', 'command-r', 'command-light'],
+  };
+
   // branding state
   const [brandName, setBrandName] = useState('AI QA Command Center');
   const [brandTheme, setBrandTheme] = useState('dark');
@@ -385,16 +400,21 @@ export default function SettingsPage() {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs text-muted-foreground">Model</Label>
-                <Select defaultValue={p.model}>
-                  <SelectTrigger className="mt-1 bg-muted/30 border-border text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {p.provider === 'openai'
-                      ? ['gpt-4o', 'gpt-4', 'gpt-3.5-turbo'].map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)
-                      : ['claude-3.5-sonnet', 'claude-3-opus', 'claude-3-haiku'].map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <div className="relative mt-1">
+                  <Input
+                    list={`models-${p.id}`}
+                    value={p.model}
+                    onChange={e => setProviders(prev => prev.map(pr => pr.id === p.id ? { ...pr, model: e.target.value } : pr))}
+                    placeholder="Type or select a model…"
+                    className="bg-muted/30 border-border text-sm font-mono"
+                  />
+                  <datalist id={`models-${p.id}`}>
+                    {(knownModels[p.provider] || []).map(m => (
+                      <option key={m} value={m} />
+                    ))}
+                  </datalist>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">Type a custom model name or pick from suggestions</p>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">API Key</Label>
@@ -451,9 +471,76 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       ))}
-      <Button variant="outline" className="w-full border-dashed" onClick={() => toast({ title: 'Add Provider', description: 'Provider setup wizard would open here.' })}>
+      <Button variant="outline" className="w-full border-dashed" onClick={() => { setNewAIProvider('openai'); setNewAIModel(''); setNewAIApiKey(''); setAddProviderDialogOpen(true); }}>
         <Plus size={14} className="mr-2" /> Add AI Provider
       </Button>
+
+      <Dialog open={addProviderDialogOpen} onOpenChange={setAddProviderDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add AI Provider</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">Provider</Label>
+              <Select value={newAIProvider} onValueChange={(v) => { setNewAIProvider(v); setNewAIModel(''); }}>
+                <SelectTrigger className="bg-muted/30 border-border text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.keys(knownModels).map(p => (
+                    <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">Model</Label>
+              <Input
+                list="new-provider-models"
+                value={newAIModel}
+                onChange={e => setNewAIModel(e.target.value)}
+                placeholder="Type or select a model…"
+                className="bg-muted/30 border-border text-sm font-mono"
+              />
+              <datalist id="new-provider-models">
+                {(knownModels[newAIProvider] || []).map(m => (
+                  <option key={m} value={m} />
+                ))}
+              </datalist>
+              <p className="text-[10px] text-muted-foreground mt-1">Select a known model or type a custom one</p>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">API Key</Label>
+              <Input type="password" value={newAIApiKey} onChange={e => setNewAIApiKey(e.target.value)} placeholder="Enter API key…" className="bg-muted/30 border-border text-sm font-mono" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddProviderDialogOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!newAIModel.trim() || !newAIApiKey.trim()}
+              onClick={() => {
+                const newProvider: AIProvider = {
+                  id: String(Date.now()),
+                  provider: newAIProvider,
+                  model: newAIModel,
+                  apiKey: newAIApiKey,
+                  temperature: 0.3,
+                  maxTokens: 4096,
+                  assignedTo: [],
+                  enabled: true,
+                };
+                setProviders(prev => [...prev, newProvider]);
+                setAddProviderDialogOpen(false);
+                toast({ title: 'Provider Added', description: `${newAIProvider} / ${newAIModel} has been added.` });
+              }}
+            >
+              Add Provider
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex justify-end">
         <Button onClick={() => handleSave('AI Providers')}><Save size={14} className="mr-2" /> Save Changes</Button>
       </div>
