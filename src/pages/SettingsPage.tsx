@@ -129,17 +129,25 @@ const availableProviders: Record<string, { name: string; type: string; urlPlaceh
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<string | null>(null);
-  const [integrations, setIntegrations] = useState(initialIntegrations);
-  const [providers, setProviders] = useState(initialProviders);
-  const [environments, setEnvironments] = useState(initialEnvironments);
-  const [channels, setChannelsRaw] = useState(loadChannels);
-  const setChannels: typeof setChannelsRaw = (update) => {
-    setChannelsRaw(prev => {
-      const next = typeof update === 'function' ? update(prev) : update;
-      try { localStorage.setItem(CHANNELS_STORAGE_KEY, JSON.stringify(next)); } catch { /* ignore */ }
-      return next;
-    });
+  const [integrations, setIntegrationsRaw] = useState(() => loadFromStorage<Integration>(INTEGRATIONS_KEY, defaultIntegrations));
+  const [providers, setProvidersRaw] = useState(() => loadFromStorage<AIProvider>(PROVIDERS_KEY, defaultProviders));
+  const [environments, setEnvironmentsRaw] = useState(() => loadFromStorage<Environment>(ENVIRONMENTS_KEY, defaultEnvironments));
+  const [channels, setChannelsRaw] = useState(() => loadFromStorage<NotificationChannel>(CHANNELS_KEY, defaultChannels));
+
+  const makePersisted = <T,>(key: string, setter: React.Dispatch<React.SetStateAction<T[]>>) => {
+    return (update: React.SetStateAction<T[]>) => {
+      setter(prev => {
+        const next = typeof update === 'function' ? (update as (prev: T[]) => T[])(prev) : update;
+        try { localStorage.setItem(key, JSON.stringify(next)); } catch { /* ignore */ }
+        return next;
+      });
+    };
   };
+
+  const setIntegrations = makePersisted(INTEGRATIONS_KEY, setIntegrationsRaw);
+  const setProviders = makePersisted(PROVIDERS_KEY, setProvidersRaw);
+  const setEnvironments = makePersisted(ENVIRONMENTS_KEY, setEnvironmentsRaw);
+  const setChannels = makePersisted(CHANNELS_KEY, setChannelsRaw);
   const { demoMode, setDemoMode } = useDemoMode();
   
   const [testingConnection, setTestingConnection] = useState<Record<string, 'idle' | 'testing' | 'success' | 'failed'>>({});
