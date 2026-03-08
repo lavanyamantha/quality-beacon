@@ -236,13 +236,16 @@ export default function SettingsPage() {
               </div>
             )}
             <div className="grid md:grid-cols-2 gap-4">
-              <div>
+              <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">URL</Label>
-                <Input defaultValue={int.url} className="mt-1 bg-muted/30 border-border text-sm" />
+                <Input defaultValue={int.url} className="bg-muted/30 border-border text-sm" />
+                <p className="text-[10px] text-muted-foreground">
+                  Base URL of your {int.name} instance
+                </p>
               </div>
-              <div>
+              <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">{int.authLabel}</Label>
-                <div className="flex gap-2 mt-1">
+                <div className="flex gap-2">
                   <Input
                     type={showApiKeys[int.id] ? 'text' : 'password'}
                     value={int.token}
@@ -250,14 +253,14 @@ export default function SettingsPage() {
                     onChange={e => setIntegrations(prev => prev.map(i => i.id === int.id ? { ...i, token: e.target.value } : i))}
                     className="bg-muted/30 border-border text-sm font-mono"
                   />
-                  <Button size="icon" variant="ghost" onClick={() => toggleApiKeyVisibility(int.id)}>
+                  <Button size="icon" variant="ghost" className="shrink-0" onClick={() => toggleApiKeyVisibility(int.id)}>
                     {showApiKeys[int.id] ? <EyeOff size={14} /> : <Eye size={14} />}
                   </Button>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  {int.type === 'azure-devops' && 'Generate from Azure DevOps → User Settings → Personal Access Tokens'}
-                  {int.type === 'jira' && 'Generate from Atlassian → Account Settings → Security → API Tokens'}
-                  {int.type === 'sonarqube' && 'Generate from SonarQube → My Account → Security → Tokens'}
+                <p className="text-[10px] text-muted-foreground">
+                  {int.type === 'azure-devops' && 'Azure DevOps → User Settings → Personal Access Tokens'}
+                  {int.type === 'jira' && 'Atlassian → Account Settings → Security → API Tokens'}
+                  {int.type === 'sonarqube' && 'SonarQube → My Account → Security → Tokens'}
                 </p>
               </div>
             </div>
