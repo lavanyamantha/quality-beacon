@@ -1,4 +1,5 @@
-import { defects } from '@/data/mockData';
+import { useRelease } from '@/contexts/ReleaseContext';
+import { getDefectsForRelease } from '@/data/releaseDataHelper';
 import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip, Cell } from 'recharts';
 
 const severityColors: Record<string, string> = {
@@ -9,6 +10,8 @@ const severityColors: Record<string, string> = {
 };
 
 export default function DefectSummaryCard() {
+  const { activeRelease } = useRelease();
+  const defects = getDefectsForRelease(activeRelease);
   const open = defects.filter(d => d.status === 'open' || d.status === 'in-progress');
   const bySeverity = ['critical', 'major', 'minor', 'trivial'].map(sev => ({
     severity: sev,

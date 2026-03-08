@@ -1,7 +1,10 @@
-import { testExecutions } from '@/data/mockData';
+import { useRelease } from '@/contexts/ReleaseContext';
+import { getTestExecutionsForRelease } from '@/data/releaseDataHelper';
 import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 
 export default function TestSummaryCard() {
+  const { activeRelease } = useRelease();
+  const testExecutions = getTestExecutionsForRelease(activeRelease);
   const latest = testExecutions[testExecutions.length - 1];
   const passRate = ((latest.passed / latest.total) * 100).toFixed(1);
 
