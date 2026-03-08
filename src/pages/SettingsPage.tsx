@@ -86,6 +86,7 @@ const initialChannels: NotificationChannel[] = [
   { id: '1', type: 'slack', target: '#qa-alerts', webhookUrl: 'https://hooks.slack.com/services/T00/B00/xxxx', enabled: true },
   { id: '2', type: 'email', target: 'qa-team@company.com', enabled: true },
   { id: '3', type: 'teams', target: 'QA Release Channel', webhookUrl: 'https://outlook.office.com/webhook/xxxx', enabled: false },
+];
 
 function loadChannels(): NotificationChannel[] {
   try {
