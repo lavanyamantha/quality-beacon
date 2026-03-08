@@ -16,6 +16,7 @@ import TimelinePage from "./pages/TimelinePage";
 import RiskPredictionPage from "./pages/RiskPredictionPage";
 import QAAssistantPage from "./pages/QAAssistantPage";
 import SettingsPage from "./pages/SettingsPage";
+import DocumentationPage from "./pages/DocumentationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/risk" element={<RiskPredictionPage />} />
             <Route path="/ai-assistant" element={<QAAssistantPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/docs" element={<DocumentationPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
