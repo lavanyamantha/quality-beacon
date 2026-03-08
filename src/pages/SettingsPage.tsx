@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useBranding } from '@/contexts/BrandingContext';
 import { useIntegrations } from '@/contexts/IntegrationsContext';
-import { isProxyEnabled, proxyTestConnection } from '@/services/proxyClient';
+import { isProxyEnabled, proxyTestConnection, fetchSettings, saveSettingsSection } from '@/services/proxyClient';
 import {
   Settings, Link2, Bot, Server, Users, Palette, Bell, Database, Shield, Activity,
   ChevronLeft, Plus, Trash2, Save, ToggleLeft, ToggleRight,
