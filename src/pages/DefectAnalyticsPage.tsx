@@ -193,7 +193,15 @@ export default function DefectAnalyticsPage() {
           <tbody>
             {defects.map(d => (
               <tr key={d.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
-                <td className="py-2.5 text-xs font-mono text-primary">{d.id}</td>
+                <td className="py-2.5 text-xs font-mono">
+                  {buildDefectUrl(d.id) ? (
+                    <a href={buildDefectUrl(d.id)!} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+                      {d.id} <ExternalLink size={10} />
+                    </a>
+                  ) : (
+                    <span className="text-primary">{d.id}</span>
+                  )}
+                </td>
                 <td className="py-2.5 text-sm text-foreground">{d.title}</td>
                 <td className="py-2.5"><span className={`text-[10px] font-medium uppercase px-2 py-0.5 rounded-full ${severityBg[d.severity]}`}>{d.severity}</span></td>
                 <td className="py-2.5"><span className={`text-[10px] font-medium uppercase px-2 py-0.5 rounded-full ${statusBg[d.status]}`}>{d.status}</span></td>
