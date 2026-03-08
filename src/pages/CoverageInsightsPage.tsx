@@ -1,27 +1,26 @@
+import { useState } from 'react';
 import { useRelease } from '@/contexts/ReleaseContext';
 import { getCoverageForRelease } from '@/data/releaseDataHelper';
 import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend, RadialBarChart, RadialBar, Cell } from 'recharts';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useIntegrations } from '@/contexts/IntegrationsContext';
 import NoDataPlaceholder from '@/components/NoDataPlaceholder';
-import { Database, ShieldCheck, AlertTriangle, TrendingUp, Info } from 'lucide-react';
+import ReleaseCompareSelector from '@/components/ReleaseCompareSelector';
+import { Release } from '@/data/mockData';
+import { Database, ShieldCheck, AlertTriangle, TrendingUp, TrendingDown, Minus, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 
-function CoverageGauge({ value, label }: { value: number; label: string }) {
+function CoverageGauge({ value, label, compareValue }: { value: number; label: string; compareValue?: number }) {
   const color = value >= 80 ? 'hsl(var(--success))' : value >= 60 ? 'hsl(var(--warning))' : 'hsl(var(--destructive))';
   const data = [{ value, fill: color }];
+  const delta = compareValue !== undefined ? value - compareValue : null;
+  const deltaColor = delta && delta > 0 ? 'text-success' : delta && delta < 0 ? 'text-destructive' : 'text-muted-foreground';
+
   return (
     <div className="flex flex-col items-center">
       <div className="w-24 h-24 relative">
-        <RadialBarChart
-          width={96} height={96}
-          cx={48} cy={48}
-          innerRadius={30} outerRadius={44}
-          barSize={8}
-          data={data}
-          startAngle={90} endAngle={-270}
-        >
+        <RadialBarChart width={96} height={96} cx={48} cy={48} innerRadius={30} outerRadius={44} barSize={8} data={data} startAngle={90} endAngle={-270}>
           <RadialBar background={{ fill: 'hsl(var(--muted))' }} dataKey="value" cornerRadius={4}>
             <Cell fill={color} />
           </RadialBar>
@@ -31,6 +30,11 @@ function CoverageGauge({ value, label }: { value: number; label: string }) {
         </div>
       </div>
       <span className="text-[10px] font-medium text-muted-foreground mt-1 uppercase tracking-wider">{label}</span>
+      {delta !== null && (
+        <span className={`text-[9px] font-mono font-medium mt-0.5 ${deltaColor}`}>
+          {delta > 0 ? '▲+' : delta < 0 ? '▼' : '—'}{Math.abs(delta)}%
+        </span>
+      )}
     </div>
   );
 }
@@ -39,11 +43,9 @@ export default function CoverageInsightsPage() {
   const { demoMode } = useDemoMode();
   const { activeRelease, selectedEnv } = useRelease();
   const { connectedSources } = useIntegrations();
+  const [compareRelease, setCompareRelease] = useState<Release | null>(null);
 
-  // Check for sources that could provide coverage data (SonarQube, GitHub, Azure DevOps)
-  const coverageSources = connectedSources.filter(s =>
-    s.provides.includes('test') || s.type === 'sonarqube'
-  );
+  const coverageSources = connectedSources.filter(s => s.provides.includes('test') || s.type === 'sonarqube');
   const hasLiveSources = coverageSources.length > 0;
 
   if (!demoMode && !hasLiveSources) {
@@ -62,19 +64,31 @@ export default function CoverageInsightsPage() {
   }
 
   const coverageData = getCoverageForRelease(activeRelease, selectedEnv);
+  const compareCoverageData = compareRelease ? getCoverageForRelease(compareRelease, selectedEnv) : null;
 
-  // Compute aggregates
-  const avgCode = Math.round(coverageData.reduce((s, c) => s + c.code, 0) / coverageData.length);
-  const avgApi = Math.round(coverageData.reduce((s, c) => s + c.api, 0) / coverageData.length);
-  const avgUi = Math.round(coverageData.reduce((s, c) => s + c.ui, 0) / coverageData.length);
+  // Aggregates
+  const avg = (data: typeof coverageData, key: 'code' | 'api' | 'ui') =>
+    Math.round(data.reduce((s, c) => s + c[key], 0) / data.length);
+
+  const avgCode = avg(coverageData, 'code');
+  const avgApi = avg(coverageData, 'api');
+  const avgUi = avg(coverageData, 'ui');
   const overallAvg = Math.round((avgCode + avgApi + avgUi) / 3);
 
-  const lowCoverageServices = coverageData.filter(c => c.code < 60 || c.api < 50 || c.ui < 40);
+  const cmpAvgCode = compareCoverageData ? avg(compareCoverageData, 'code') : undefined;
+  const cmpAvgApi = compareCoverageData ? avg(compareCoverageData, 'api') : undefined;
+  const cmpAvgUi = compareCoverageData ? avg(compareCoverageData, 'ui') : undefined;
+  const cmpOverallAvg = cmpAvgCode !== undefined && cmpAvgApi !== undefined && cmpAvgUi !== undefined
+    ? Math.round((cmpAvgCode + cmpAvgApi + cmpAvgUi) / 3) : undefined;
 
-  // Determine data source label
-  const sourceLabel = hasLiveSources
-    ? coverageSources.map(s => s.name).join(', ')
-    : 'Sample Data';
+  const lowCoverageServices = coverageData.filter(c => c.code < 60 || c.api < 50 || c.ui < 40);
+  const sourceLabel = hasLiveSources ? coverageSources.map(s => s.name).join(', ') : 'Sample Data';
+
+  // Comparison chart data
+  const compareMap = compareCoverageData ? new Map(compareCoverageData.map(c => [c.service, c])) : null;
+  const comparisonTableData = compareRelease && compareCoverageData
+    ? coverageData.map(c => ({ ...c, cmp: compareMap?.get(c.service) }))
+    : null;
 
   return (
     <div className="space-y-6">
@@ -84,6 +98,8 @@ export default function CoverageInsightsPage() {
           Coverage for {activeRelease.version} — {selectedEnv === 'All' ? 'All environments' : selectedEnv}
         </p>
       </div>
+
+      <ReleaseCompareSelector compareRelease={compareRelease} onCompareChange={setCompareRelease} />
 
       {/* Data Source Banner */}
       <div className="flex items-center gap-2 flex-wrap">
@@ -105,33 +121,22 @@ export default function CoverageInsightsPage() {
       </div>
 
       {/* Summary Gauges */}
-      <motion.div
-        className="dashboard-card"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
+      <motion.div className="dashboard-card" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <div className="dashboard-card-header mb-4">
           <span className="dashboard-card-title">Coverage Summary</span>
-          <Badge variant="secondary" className="text-[9px] uppercase">
-            {hasLiveSources ? 'Live' : 'Demo'}
-          </Badge>
+          <Badge variant="secondary" className="text-[9px] uppercase">{hasLiveSources ? 'Live' : 'Demo'}</Badge>
         </div>
         <div className="flex items-center justify-around flex-wrap gap-4">
-          <CoverageGauge value={overallAvg} label="Overall" />
-          <CoverageGauge value={avgCode} label="Code" />
-          <CoverageGauge value={avgApi} label="API Tests" />
-          <CoverageGauge value={avgUi} label="UI Tests" />
+          <CoverageGauge value={overallAvg} label="Overall" compareValue={cmpOverallAvg} />
+          <CoverageGauge value={avgCode} label="Code" compareValue={cmpAvgCode} />
+          <CoverageGauge value={avgApi} label="API Tests" compareValue={cmpAvgApi} />
+          <CoverageGauge value={avgUi} label="UI Tests" compareValue={cmpAvgUi} />
         </div>
       </motion.div>
 
       {/* Low Coverage Alerts */}
       {lowCoverageServices.length > 0 && (
-        <motion.div
-          className="dashboard-card bg-warning/5 border-warning/20"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-        >
+        <motion.div className="dashboard-card bg-warning/5 border-warning/20" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle size={14} className="text-warning" />
             <span className="text-sm font-semibold text-warning">Low Coverage Alerts</span>
@@ -152,12 +157,7 @@ export default function CoverageInsightsPage() {
       )}
 
       {/* Bar Chart */}
-      <motion.div
-        className="dashboard-card"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
+      <motion.div className="dashboard-card" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <div className="dashboard-card-header">
           <span className="dashboard-card-title">Coverage by Service</span>
         </div>
@@ -177,13 +177,8 @@ export default function CoverageInsightsPage() {
         </div>
       </motion.div>
 
-      {/* Coverage Table */}
-      <motion.div
-        className="dashboard-card"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-      >
+      {/* Detailed Breakdown with Comparison */}
+      <motion.div className="dashboard-card" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
         <div className="dashboard-card-header mb-3">
           <span className="dashboard-card-title">Detailed Breakdown</span>
           <div className="flex items-center gap-1">
@@ -200,12 +195,17 @@ export default function CoverageInsightsPage() {
                 <th className="text-right py-2 px-2 text-muted-foreground font-medium uppercase tracking-wider">API</th>
                 <th className="text-right py-2 px-2 text-muted-foreground font-medium uppercase tracking-wider">UI</th>
                 <th className="text-right py-2 px-2 text-muted-foreground font-medium uppercase tracking-wider">Avg</th>
+                {compareRelease && <th className="text-right py-2 px-2 text-muted-foreground font-medium uppercase tracking-wider">Δ vs {compareRelease.version}</th>}
               </tr>
             </thead>
             <tbody>
-              {coverageData.map((c, i) => {
+              {coverageData.map((c) => {
                 const avg = Math.round((c.code + c.api + c.ui) / 3);
                 const avgColor = avg >= 80 ? 'text-success' : avg >= 60 ? 'text-warning' : 'text-destructive';
+                const cmp = compareMap?.get(c.service);
+                const cmpAvg = cmp ? Math.round((cmp.code + cmp.api + cmp.ui) / 3) : null;
+                const delta = cmpAvg !== null ? avg - cmpAvg : null;
+
                 return (
                   <tr key={c.service} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                     <td className="py-2 px-2 font-mono font-medium text-foreground">{c.service}</td>
@@ -213,6 +213,15 @@ export default function CoverageInsightsPage() {
                     <td className="text-right py-2 px-2 font-mono">{c.api}%</td>
                     <td className="text-right py-2 px-2 font-mono">{c.ui}%</td>
                     <td className={`text-right py-2 px-2 font-mono font-bold ${avgColor}`}>{avg}%</td>
+                    {compareRelease && (
+                      <td className="text-right py-2 px-2 font-mono font-medium">
+                        {delta !== null && (
+                          <span className={delta > 0 ? 'text-success' : delta < 0 ? 'text-destructive' : 'text-muted-foreground'}>
+                            {delta > 0 ? '▲+' : delta < 0 ? '▼' : '—'}{Math.abs(delta)}%
+                          </span>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 );
               })}
