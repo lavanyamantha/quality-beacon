@@ -58,8 +58,14 @@ interface NotificationChannel {
   enabled: boolean;
 }
 
-/* ─── mock state ─── */
-const initialIntegrations: Integration[] = [
+/* ─── localStorage keys ─── */
+const INTEGRATIONS_KEY = 'qa-dashboard-integrations';
+const PROVIDERS_KEY = 'qa-dashboard-ai-providers';
+const ENVIRONMENTS_KEY = 'qa-dashboard-environments';
+const CHANNELS_KEY = 'qa-dashboard-notification-channels';
+
+/* ─── default state ─── */
+const defaultIntegrations: Integration[] = [
   { id: '1', name: 'Azure DevOps', type: 'azure-devops', url: 'https://dev.azure.com/myorg', status: 'connected', lastSync: '2026-03-08 09:14' },
   { id: '2', name: 'Jira Cloud', type: 'jira', url: 'https://myteam.atlassian.net', status: 'disconnected' },
   { id: '3', name: 'SonarQube', type: 'sonarqube', url: 'https://sonar.internal.com', status: 'connected', lastSync: '2026-03-08 08:30' },
@@ -67,12 +73,12 @@ const initialIntegrations: Integration[] = [
   { id: '5', name: 'AWS', type: 'aws', url: 'https://console.aws.amazon.com', status: 'disconnected' },
 ];
 
-const initialProviders: AIProvider[] = [
+const defaultProviders: AIProvider[] = [
   { id: '1', provider: 'openai', model: 'gpt-4o', temperature: 0.3, maxTokens: 4096, assignedTo: ['risk-prediction', 'qa-assistant'], enabled: true, connectionStatus: 'untested' },
   { id: '2', provider: 'anthropic', model: 'claude-3.5-sonnet', temperature: 0.2, maxTokens: 4096, assignedTo: ['defect-analysis'], enabled: false, connectionStatus: 'untested' },
 ];
 
-const initialEnvironments: Environment[] = [
+const defaultEnvironments: Environment[] = [
   { id: '1', name: 'Development', healthUrl: 'https://dev-api.internal.com/health', pipelineMapping: 'dev-*', enabled: true },
   { id: '2', name: 'QA', healthUrl: 'https://qa-api.internal.com/health', pipelineMapping: 'qa-*', enabled: true },
   { id: '3', name: 'Staging', healthUrl: 'https://stage-api.internal.com/health', pipelineMapping: 'stage-*', enabled: true },
@@ -80,20 +86,19 @@ const initialEnvironments: Environment[] = [
   { id: '5', name: 'Performance', healthUrl: 'https://perf-api.internal.com/health', pipelineMapping: 'perf-*', enabled: false },
 ];
 
-const CHANNELS_STORAGE_KEY = 'qa-dashboard-notification-channels';
-
-const initialChannels: NotificationChannel[] = [
+const defaultChannels: NotificationChannel[] = [
   { id: '1', type: 'slack', target: '#qa-alerts', webhookUrl: 'https://hooks.slack.com/services/T00/B00/xxxx', enabled: true },
   { id: '2', type: 'email', target: 'qa-team@company.com', enabled: true },
   { id: '3', type: 'teams', target: 'QA Release Channel', webhookUrl: 'https://outlook.office.com/webhook/xxxx', enabled: false },
 ];
 
-function loadChannels(): NotificationChannel[] {
+/* ─── localStorage helpers ─── */
+function loadFromStorage<T>(key: string, fallback: T[]): T[] {
   try {
-    const stored = localStorage.getItem(CHANNELS_STORAGE_KEY);
+    const stored = localStorage.getItem(key);
     if (stored) return JSON.parse(stored);
   } catch { /* ignore */ }
-  return initialChannels;
+  return fallback;
 }
 
 /* ─── settings sections ─── */
