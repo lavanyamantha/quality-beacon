@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useBranding } from '@/contexts/BrandingContext';
 import { useIntegrations } from '@/contexts/IntegrationsContext';
+import { isProxyEnabled, proxyTestConnection } from '@/services/proxyClient';
 import {
   Settings, Link2, Bot, Server, Users, Palette, Bell, Database, Shield, Activity,
   ChevronLeft, Plus, Trash2, Save, Eye, EyeOff, ToggleLeft, ToggleRight,
-  Check, AlertTriangle, Loader2, Wifi, WifiOff, RefreshCw, ExternalLink
+  Check, AlertTriangle, Loader2, Wifi, WifiOff, RefreshCw, ExternalLink, Lock
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,10 +26,6 @@ interface Integration {
   name: string;
   type: string;
   url: string;
-  authType: 'pat' | 'api-key' | 'oauth';
-  authLabel: string;
-  authPlaceholder: string;
-  token: string;
   status: 'connected' | 'disconnected' | 'error';
   lastSync?: string;
 }
@@ -64,11 +61,11 @@ interface NotificationChannel {
 
 /* ─── mock state ─── */
 const initialIntegrations: Integration[] = [
-  { id: '1', name: 'Azure DevOps', type: 'azure-devops', url: 'https://dev.azure.com/myorg', authType: 'pat', authLabel: 'Personal Access Token (PAT)', authPlaceholder: 'Enter your Azure DevOps PAT', token: '', status: 'connected', lastSync: '2026-03-08 09:14' },
-  { id: '2', name: 'Jira Cloud', type: 'jira', url: 'https://myteam.atlassian.net', authType: 'api-key', authLabel: 'API Token', authPlaceholder: 'Enter your Atlassian API token', token: '', status: 'disconnected' },
-  { id: '3', name: 'SonarQube', type: 'sonarqube', url: 'https://sonar.internal.com', authType: 'api-key', authLabel: 'API Key / Token', authPlaceholder: 'Enter your SonarQube token', token: '', status: 'connected', lastSync: '2026-03-08 08:30' },
-  { id: '4', name: 'GitHub', type: 'github', url: 'https://github.com/myorg', authType: 'pat', authLabel: 'Personal Access Token (PAT)', authPlaceholder: 'Enter your GitHub PAT (classic or fine-grained)', token: '', status: 'disconnected' },
-  { id: '5', name: 'AWS', type: 'aws', url: 'https://console.aws.amazon.com', authType: 'api-key', authLabel: 'Access Key ID / Secret', authPlaceholder: 'Enter your AWS Access Key ID', token: '', status: 'disconnected' },
+  { id: '1', name: 'Azure DevOps', type: 'azure-devops', url: 'https://dev.azure.com/myorg', status: 'connected', lastSync: '2026-03-08 09:14' },
+  { id: '2', name: 'Jira Cloud', type: 'jira', url: 'https://myteam.atlassian.net', status: 'disconnected' },
+  { id: '3', name: 'SonarQube', type: 'sonarqube', url: 'https://sonar.internal.com', status: 'connected', lastSync: '2026-03-08 08:30' },
+  { id: '4', name: 'GitHub', type: 'github', url: 'https://github.com/myorg', status: 'disconnected' },
+  { id: '5', name: 'AWS', type: 'aws', url: 'https://console.aws.amazon.com', status: 'disconnected' },
 ];
 
 const initialProviders: AIProvider[] = [
@@ -104,16 +101,16 @@ const sections = [
 ];
 
 /* ─── component ─── */
-const availableProviders: Record<string, { name: string; type: string; urlPlaceholder: string; authType: Integration['authType']; authLabel: string; authPlaceholder: string; helpText: string }> = {
-  'azure-devops': { name: 'Azure DevOps', type: 'azure-devops', urlPlaceholder: 'https://dev.azure.com/yourorg', authType: 'pat', authLabel: 'Personal Access Token (PAT)', authPlaceholder: 'Enter your Azure DevOps PAT', helpText: 'Azure DevOps → User Settings → Personal Access Tokens' },
-  'jira': { name: 'Jira Cloud', type: 'jira', urlPlaceholder: 'https://yourteam.atlassian.net', authType: 'api-key', authLabel: 'API Token', authPlaceholder: 'Enter your Atlassian API token', helpText: 'Atlassian → Account Settings → Security → API Tokens' },
-  'sonarqube': { name: 'SonarQube', type: 'sonarqube', urlPlaceholder: 'https://sonar.yourcompany.com', authType: 'api-key', authLabel: 'API Key / Token', authPlaceholder: 'Enter your SonarQube token', helpText: 'SonarQube → My Account → Security → Tokens' },
-  'github': { name: 'GitHub', type: 'github', urlPlaceholder: 'https://github.com/yourorg', authType: 'pat', authLabel: 'Personal Access Token (PAT)', authPlaceholder: 'Enter your GitHub PAT', helpText: 'GitHub → Settings → Developer Settings → Personal Access Tokens' },
-  'aws': { name: 'AWS', type: 'aws', urlPlaceholder: 'https://console.aws.amazon.com', authType: 'api-key', authLabel: 'Access Key ID / Secret', authPlaceholder: 'Enter your AWS Access Key ID', helpText: 'AWS → IAM → Security Credentials → Access Keys' },
-  'gitlab': { name: 'GitLab', type: 'gitlab', urlPlaceholder: 'https://gitlab.com/yourorg', authType: 'pat', authLabel: 'Personal Access Token', authPlaceholder: 'Enter your GitLab PAT', helpText: 'GitLab → Preferences → Access Tokens' },
-  'jenkins': { name: 'Jenkins', type: 'jenkins', urlPlaceholder: 'https://jenkins.yourcompany.com', authType: 'api-key', authLabel: 'API Token', authPlaceholder: 'Enter your Jenkins API token', helpText: 'Jenkins → User → Configure → API Token' },
-  'selenium-grid': { name: 'Selenium Grid', type: 'selenium-grid', urlPlaceholder: 'https://selenium.yourcompany.com', authType: 'api-key', authLabel: 'Access Token', authPlaceholder: 'Enter access token (if required)', helpText: 'Selenium Grid Hub URL with optional auth' },
-  'bitbucket': { name: 'Bitbucket', type: 'bitbucket', urlPlaceholder: 'https://bitbucket.org/yourworkspace', authType: 'pat', authLabel: 'App Password', authPlaceholder: 'Enter your Bitbucket app password', helpText: 'Bitbucket → Personal Settings → App Passwords' },
+const availableProviders: Record<string, { name: string; type: string; urlPlaceholder: string }> = {
+  'azure-devops': { name: 'Azure DevOps', type: 'azure-devops', urlPlaceholder: 'https://dev.azure.com/yourorg' },
+  'jira': { name: 'Jira Cloud', type: 'jira', urlPlaceholder: 'https://yourteam.atlassian.net' },
+  'sonarqube': { name: 'SonarQube', type: 'sonarqube', urlPlaceholder: 'https://sonar.yourcompany.com' },
+  'github': { name: 'GitHub', type: 'github', urlPlaceholder: 'https://github.com/yourorg' },
+  'aws': { name: 'AWS', type: 'aws', urlPlaceholder: 'https://console.aws.amazon.com' },
+  'gitlab': { name: 'GitLab', type: 'gitlab', urlPlaceholder: 'https://gitlab.com/yourorg' },
+  'jenkins': { name: 'Jenkins', type: 'jenkins', urlPlaceholder: 'https://jenkins.yourcompany.com' },
+  'selenium-grid': { name: 'Selenium Grid', type: 'selenium-grid', urlPlaceholder: 'https://selenium.yourcompany.com' },
+  'bitbucket': { name: 'Bitbucket', type: 'bitbucket', urlPlaceholder: 'https://bitbucket.org/yourworkspace' },
 };
 
 export default function SettingsPage() {
@@ -125,12 +122,12 @@ export default function SettingsPage() {
   const { demoMode, setDemoMode } = useDemoMode();
   const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({});
   const [testingConnection, setTestingConnection] = useState<Record<string, 'idle' | 'testing' | 'success' | 'failed'>>({});
-  const { updateCredentials, updateStatus: updateIntegrationStatus } = useIntegrations();
+  const { updateStatus: updateIntegrationStatus } = useIntegrations();
+  const proxyEnabled = isProxyEnabled();
 
-  // Sync credentials to global IntegrationsContext whenever local integrations change
+  // Sync status to global IntegrationsContext whenever local integrations change
   useEffect(() => {
     for (const int of integrations) {
-      updateCredentials(int.id, int.url, int.token);
       updateIntegrationStatus(int.id, int.status, int.lastSync);
     }
   }, [integrations]);
@@ -139,7 +136,6 @@ export default function SettingsPage() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newProviderType, setNewProviderType] = useState('');
   const [newUrl, setNewUrl] = useState('');
-  const [newToken, setNewToken] = useState('');
 
   // add AI provider dialog state
   const [addProviderDialogOpen, setAddProviderDialogOpen] = useState(false);
@@ -180,133 +176,39 @@ export default function SettingsPage() {
   };
 
   const handleTestConnection = async (int: Integration) => {
-    // Pre-flight: check token
-    if (!int.token.trim()) {
-      toast({
-        title: 'Credentials Required',
-        description: `Please provide a ${int.authLabel} before testing the connection.`,
-        variant: 'destructive',
-      });
-      return;
-    }
-
     setTestingConnection(prev => ({ ...prev, [int.id]: 'testing' }));
 
-    // URL domain validation first
-    let domainOk = false;
-    try {
-      const parsed = new URL(int.url);
-      const validDomains: Record<string, string[]> = {
-        'azure-devops': ['dev.azure.com', 'visualstudio.com'],
-        'jira': ['atlassian.net'],
-        'sonarqube': ['sonarqube', 'sonar'],
-        'github': ['github.com'],
-        'aws': ['amazonaws.com', 'aws.amazon.com'],
-        'gitlab': ['gitlab.com', 'gitlab'],
-        'jenkins': ['jenkins'],
-        'selenium-grid': ['selenium'],
-        'bitbucket': ['bitbucket.org'],
-      };
-      const allowed = validDomains[int.type] || [];
-      domainOk = allowed.some(d => parsed.hostname.includes(d));
-    } catch {
-      setTestingConnection(prev => ({ ...prev, [int.id]: 'failed' }));
-      toast({ title: 'Connection Failed', description: 'Invalid URL format.', variant: 'destructive' });
-      setTimeout(() => setTestingConnection(prev => ({ ...prev, [int.id]: 'idle' })), 5000);
-      return;
-    }
-
-    if (!domainOk) {
-      setTestingConnection(prev => ({ ...prev, [int.id]: 'failed' }));
-      toast({ title: 'Connection Failed', description: `URL domain does not match expected ${int.name} endpoints.`, variant: 'destructive' });
-      setTimeout(() => setTestingConnection(prev => ({ ...prev, [int.id]: 'idle' })), 5000);
-      return;
-    }
-
-    if (int.status !== 'connected') {
-      setTestingConnection(prev => ({ ...prev, [int.id]: 'failed' }));
-      toast({ title: 'Connection Failed', description: 'Integration is not connected. Connect first, then test.', variant: 'destructive' });
-      setTimeout(() => setTestingConnection(prev => ({ ...prev, [int.id]: 'idle' })), 5000);
-      return;
-    }
-
-    const token = int.token.trim();
-
-    // Real API checks for CORS-friendly providers
-    const liveCheckEndpoints: Record<string, { url: string; headers: (t: string) => Record<string, string> }> = {
-      'github': {
-        url: 'https://api.github.com/user',
-        headers: (t) => ({ Authorization: `Bearer ${t}`, Accept: 'application/vnd.github+json' }),
-      },
-      'gitlab': {
-        url: 'https://gitlab.com/api/v4/user',
-        headers: (t) => ({ 'PRIVATE-TOKEN': t }),
-      },
-      'bitbucket': {
-        url: 'https://api.bitbucket.org/2.0/user',
-        headers: (t) => ({ Authorization: `Bearer ${t}`, Accept: 'application/json' }),
-      },
-    };
-
-    const liveCheck = liveCheckEndpoints[int.type];
-
-    if (liveCheck) {
-      // Real API call
+    if (proxyEnabled) {
+      // Route through the server-side proxy — credentials are checked server-side
       try {
-        const resp = await fetch(liveCheck.url, { headers: liveCheck.headers(token) });
-        if (resp.ok) {
-          setTestingConnection(prev => ({ ...prev, [int.id]: 'success' }));
-          toast({ title: 'Connection Successful', description: `${int.name} authenticated and responded successfully.` });
-        } else if (resp.status === 401 || resp.status === 403) {
-          setTestingConnection(prev => ({ ...prev, [int.id]: 'failed' }));
-          toast({ title: 'Authentication Failed', description: `${int.name} rejected the credentials (HTTP ${resp.status}). Please check your token and permissions.`, variant: 'destructive' });
-        } else {
-          setTestingConnection(prev => ({ ...prev, [int.id]: 'failed' }));
-          toast({ title: 'Connection Failed', description: `${int.name} returned HTTP ${resp.status}. The service may be unavailable.`, variant: 'destructive' });
+        const result = await proxyTestConnection(int.type);
+        const status = result.ok ? 'success' : 'failed';
+        setTestingConnection(prev => ({ ...prev, [int.id]: status }));
+        toast({
+          title: result.ok ? 'Connection Successful' : 'Connection Failed',
+          description: result.ok
+            ? `${int.name} verified successfully${result.responseTimeMs ? ` (${result.responseTimeMs}ms)` : ''}.`
+            : result.error || `Could not verify ${int.name}.`,
+          variant: result.ok ? undefined : 'destructive',
+        });
+        if (result.ok) {
+          setIntegrations(prev => prev.map(i => i.id === int.id ? { ...i, status: 'connected', lastSync: new Date().toISOString().slice(0, 16).replace('T', ' ') } : i));
         }
-      } catch (err) {
+      } catch {
         setTestingConnection(prev => ({ ...prev, [int.id]: 'failed' }));
-        toast({ title: 'Connection Failed', description: `Could not reach ${int.name}. Network error or CORS restriction.`, variant: 'destructive' });
-      }
-      setTimeout(() => setTestingConnection(prev => ({ ...prev, [int.id]: 'idle' })), 5000);
-      return;
-    }
-
-    // Fallback: format-only validation for non-CORS providers (Azure DevOps, Jira, SonarQube, AWS, etc.)
-    const tokenRules: Record<string, { minLength: number; pattern?: RegExp; hint: string }> = {
-      'azure-devops': { minLength: 52, hint: 'Azure DevOps PATs are typically 52+ characters. (Format check only — real verification requires server-side proxy.)' },
-      'jira': { minLength: 24, hint: 'Atlassian API tokens are typically 24+ characters. (Format check only — real verification requires server-side proxy.)' },
-      'sonarqube': { minLength: 20, hint: 'SonarQube tokens are typically 20+ characters. (Format check only — real verification requires server-side proxy.)' },
-      'aws': { minLength: 16, pattern: /^AK/, hint: 'AWS Access Key IDs start with "AK". (Format check only.)' },
-    };
-
-    await new Promise(r => setTimeout(r, 1500)); // simulate delay
-
-    const rule = tokenRules[int.type];
-    let failReason = '';
-    let success = false;
-
-    if (rule) {
-      if (token.length < rule.minLength) {
-        failReason = `Invalid credentials: token is too short. ${rule.hint}`;
-      } else if (rule.pattern && !rule.pattern.test(token)) {
-        failReason = `Invalid credentials format. ${rule.hint}`;
-      } else {
-        success = true;
+        toast({ title: 'Connection Failed', description: `Could not reach proxy server. Is it running?`, variant: 'destructive' });
       }
     } else {
-      success = token.length >= 10;
-      if (!success) failReason = 'Token appears too short to be valid.';
+      // No proxy — simulate a delay and show guidance
+      await new Promise(r => setTimeout(r, 1500));
+      setTestingConnection(prev => ({ ...prev, [int.id]: 'failed' }));
+      toast({
+        title: 'Proxy Not Configured',
+        description: 'Set VITE_PROXY_URL and run the proxy server to enable live connection testing. Credentials are managed server-side.',
+        variant: 'destructive',
+      });
     }
 
-    setTestingConnection(prev => ({ ...prev, [int.id]: success ? 'success' : 'failed' }));
-    toast({
-      title: success ? 'Format Validated' : 'Connection Failed',
-      description: success
-        ? `${int.name} credentials appear valid (format check). Full verification requires a server-side proxy.`
-        : failReason,
-      variant: success ? undefined : 'destructive',
-    });
     setTimeout(() => setTestingConnection(prev => ({ ...prev, [int.id]: 'idle' })), 5000);
   };
 
@@ -372,34 +274,12 @@ export default function SettingsPage() {
                 <AlertTriangle size={14} /> Failed to reach {int.name}. Check URL and credentials.
               </div>
             )}
-            <div className="grid md:grid-cols-2 gap-x-4 gap-y-1">
+            <div className="grid md:grid-cols-1 gap-x-4 gap-y-1">
               <Label className="text-xs text-muted-foreground">URL</Label>
-              <Label className="text-xs text-muted-foreground">{int.authLabel}</Label>
-              <Input defaultValue={int.url} className="bg-muted/30 border-border text-sm h-10" />
-              <div className="relative">
-                <Input
-                  type={showApiKeys[int.id] ? 'text' : 'password'}
-                  value={int.token}
-                  placeholder={int.authPlaceholder}
-                  onChange={e => setIntegrations(prev => prev.map(i => i.id === int.id ? { ...i, token: e.target.value } : i))}
-                  className="bg-muted/30 border-border text-sm font-mono h-10 pr-10"
-                />
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="absolute right-0 top-0 h-10 w-10 shrink-0"
-                  onClick={() => toggleApiKeyVisibility(int.id)}
-                >
-                  {showApiKeys[int.id] ? <EyeOff size={14} /> : <Eye size={14} />}
-                </Button>
-              </div>
+              <Input defaultValue={int.url} className="bg-muted/30 border-border text-sm h-10" readOnly />
               <p className="text-[10px] text-muted-foreground">Base URL of your {int.name} instance</p>
-              <p className="text-[10px] text-muted-foreground">
-                {int.type === 'azure-devops' && 'Azure DevOps → User Settings → Personal Access Tokens'}
-                {int.type === 'jira' && 'Atlassian → Account Settings → Security → API Tokens'}
-                {int.type === 'sonarqube' && 'SonarQube → My Account → Security → Tokens'}
-                {int.type === 'github' && 'GitHub → Settings → Developer Settings → Personal Access Tokens'}
-                {int.type === 'aws' && 'AWS → IAM → Security Credentials → Access Keys'}
+              <p className="text-[10px] text-muted-foreground italic mt-1">
+                Credentials are managed securely on the server. Configure them in <code className="text-primary">server/.env</code>
               </p>
             </div>
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
@@ -408,7 +288,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       ))}
-      <Button variant="outline" className="w-full border-dashed" onClick={() => { setNewProviderType(''); setNewUrl(''); setNewToken(''); setAddDialogOpen(true); }}>
+      <Button variant="outline" className="w-full border-dashed" onClick={() => { setNewProviderType(''); setNewUrl(''); setAddDialogOpen(true); }}>
         <Plus size={14} className="mr-2" /> Add Integration
       </Button>
 
@@ -436,17 +316,13 @@ export default function SettingsPage() {
             {newProviderType && (() => {
               const p = availableProviders[newProviderType];
               return (
-                <>
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1.5 block">URL</Label>
-                    <Input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder={p.urlPlaceholder} className="bg-muted/30 border-border text-sm" />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1.5 block">{p.authLabel}</Label>
-                    <Input type="password" value={newToken} onChange={e => setNewToken(e.target.value)} placeholder={p.authPlaceholder} className="bg-muted/30 border-border text-sm font-mono" />
-                    <p className="text-[10px] text-muted-foreground mt-1">{p.helpText}</p>
-                  </div>
-                </>
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">URL</Label>
+                  <Input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder={p.urlPlaceholder} className="bg-muted/30 border-border text-sm" />
+                  <p className="text-[10px] text-muted-foreground mt-1 italic">
+                    Credentials should be configured in <code className="text-primary">server/.env</code> — they are never stored in the browser.
+                  </p>
+                </div>
               );
             })()}
           </div>
@@ -461,15 +337,11 @@ export default function SettingsPage() {
                   name: p.name,
                   type: p.type,
                   url: newUrl,
-                  authType: p.authType,
-                  authLabel: p.authLabel,
-                  authPlaceholder: p.authPlaceholder,
-                  token: newToken,
                   status: 'disconnected',
                 };
                 setIntegrations(prev => [...prev, newIntegration]);
                 setAddDialogOpen(false);
-                toast({ title: 'Integration Added', description: `${p.name} has been added. Connect and test to verify.` });
+                toast({ title: 'Integration Added', description: `${p.name} has been added. Configure credentials in server/.env and test the connection.` });
               }}
             >
               Add Integration

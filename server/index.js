@@ -115,6 +115,51 @@ app.post('/api/proxy/:type', async (req, res) => {
   }
 });
 
+// ── GET /api/proxy/:type/test — test integration connectivity ──
+app.get('/api/proxy/:type/test', async (req, res) => {
+  const { type } = req.params;
+  const creds = getCredentials(type);
+
+  if (!creds?.url || !creds?.token) {
+    return res.json({ ok: false, error: `Integration '${type}' is not configured on the server. Add credentials to server/.env` });
+  }
+
+  const start = Date.now();
+  try {
+    const fetchModule = await import('node-fetch');
+    const fetchFn = fetchModule.default;
+    const headers = buildAuthHeaders(type, creds.token);
+
+    // Use a lightweight endpoint per provider
+    const testPaths = {
+      'github': '/user',
+      'gitlab': '/api/v4/user',
+      'bitbucket': '/2.0/user',
+      'azure-devops': '/_apis/projects?api-version=7.0&$top=1',
+      'jira': '/rest/api/3/myself',
+      'sonarqube': '/api/authentication/validate',
+      'jenkins': '/api/json',
+      'aws': '/',
+      'selenium': '/status',
+    };
+
+    const baseUrl = creds.url.replace(/\/+$/, '');
+    const testPath = testPaths[type] || '/';
+    const response = await fetchFn(`${baseUrl}${testPath}`, { method: 'GET', headers });
+    const responseTimeMs = Date.now() - start;
+
+    if (response.ok || response.status === 200) {
+      res.json({ ok: true, responseTimeMs });
+    } else if (response.status === 401 || response.status === 403) {
+      res.json({ ok: false, error: `Authentication failed (HTTP ${response.status}). Check credentials in server/.env`, responseTimeMs });
+    } else {
+      res.json({ ok: false, error: `Service responded with HTTP ${response.status}`, responseTimeMs });
+    }
+  } catch (err) {
+    res.json({ ok: false, error: `Could not reach ${type}: ${err.message}`, responseTimeMs: Date.now() - start });
+  }
+});
+
 // ── GET /api/proxy/:type/health — quick health check via proxy ──
 app.get('/api/proxy/:type/health', async (req, res) => {
   const { type } = req.params;
