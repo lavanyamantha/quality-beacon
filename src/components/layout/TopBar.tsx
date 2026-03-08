@@ -1,4 +1,4 @@
-import { Bell, Search, Menu } from 'lucide-react';
+import { Bell, Search, Menu, FlaskConical } from 'lucide-react';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useRelease } from '@/contexts/ReleaseContext';
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +42,12 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
             <div className="hidden md:block text-xs text-muted-foreground">
               Env: <span className="font-medium text-foreground">{selectedEnv === 'All' ? activeRelease.environment : selectedEnv}</span>
             </div>
+            {demoMode && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-warning/15 border border-warning/30 text-warning">
+                <FlaskConical size={13} />
+                <span className="text-[11px] font-semibold">Demo Data</span>
+              </div>
+            )}
           </>
         ) : (
           <div className="text-xs text-muted-foreground">No release data</div>
