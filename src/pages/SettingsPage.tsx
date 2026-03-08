@@ -140,7 +140,6 @@ export default function SettingsPage() {
   const [addProviderDialogOpen, setAddProviderDialogOpen] = useState(false);
   const [newAIProvider, setNewAIProvider] = useState('openai');
   const [newAIModel, setNewAIModel] = useState('');
-  const [newAIApiKey, setNewAIApiKey] = useState('');
 
   // known models per provider (users can also type custom ones)
   const knownModels: Record<string, string[]> = {
