@@ -23,7 +23,7 @@ import jsPDF from 'jspdf';
 const environments = ['All', 'Dev', 'QA', 'Stage', 'Prod'];
 
 const compareLinks = [
-  { to: '/test-analytics', label: 'Test Analytics', icon: FlaskConical },
+  { to: '/test-analytics', label: 'Test Analytics', icon: TestTube2 },
   { to: '/flaky-tests', label: 'Flaky Tests', icon: Zap },
   { to: '/defect-analytics', label: 'Defect Analysis', icon: Bug },
   { to: '/coverage', label: 'Coverage', icon: Shield },
