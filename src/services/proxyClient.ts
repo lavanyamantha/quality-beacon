@@ -49,6 +49,17 @@ export async function fetchIntegrationsFromProxy(): Promise<any[]> {
 }
 
 /**
+ * Test an integration's connectivity through the proxy.
+ * The proxy checks credentials server-side and pings the provider.
+ */
+export async function proxyTestConnection(
+  integrationType: string
+): Promise<{ ok: boolean; error?: string; responseTimeMs?: number }> {
+  const response = await fetch(`${PROXY_URL}/api/proxy/${integrationType}/test`);
+  return response.json();
+}
+
+/**
  * Health check through the proxy.
  */
 export async function proxyHealthCheck(
