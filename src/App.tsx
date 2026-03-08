@@ -41,7 +41,7 @@ const App = () => (
         <AuthProviderWrapper>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
             <Routes>
               {/* Public routes */}
               <Route path="/login" element={<LoginPage />} />
