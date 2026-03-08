@@ -1,0 +1,15 @@
+{
+  "name": "qa-dashboard-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Server-side proxy for QA Dashboard — keeps integration credentials secure",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "node-fetch": "^3.3.2"
+  }
+}
