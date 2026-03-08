@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
+import { loadIntegrationsFromEnv } from '@/config/integrations';
 
 export interface IntegrationSource {
   id: string;
@@ -27,27 +28,8 @@ interface IntegrationsContextType {
 
 const IntegrationsContext = createContext<IntegrationsContextType | undefined>(undefined);
 
-const defaultIntegrations: IntegrationSource[] = [
-  {
-    id: '1', name: 'Azure DevOps', type: 'azure-devops', status: 'connected', lastSync: '2026-03-08 09:14',
-    provides: ['release', 'deployment', 'pipeline', 'test'],
-  },
-  {
-    id: '2', name: 'Jira Cloud', type: 'jira', status: 'disconnected',
-    provides: ['defect'],
-  },
-  {
-    id: '3', name: 'SonarQube', type: 'sonarqube', status: 'connected', lastSync: '2026-03-08 08:30',
-    provides: ['test'],
-  },
-  {
-    id: '4', name: 'GitHub', type: 'github', status: 'disconnected',
-    provides: ['release', 'deployment', 'pipeline'],
-  },
-];
-
 export function IntegrationsProvider({ children }: { children: ReactNode }) {
-  const [integrations, setIntegrations] = useState<IntegrationSource[]>(defaultIntegrations);
+  const [integrations, setIntegrations] = useState<IntegrationSource[]>(() => loadIntegrationsFromEnv());
 
   const updateStatus = (id: string, status: IntegrationSource['status'], lastSync?: string) => {
     setIntegrations(prev =>
