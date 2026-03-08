@@ -232,7 +232,7 @@ export function getRiskDataForRelease(release: Release, env: string): ServiceRis
 
     factors.sort((a, b) => b.contribution - a.contribution);
 
-    const riskLevel = risk > 60 ? 'critical' : risk > 40 ? 'high' : risk > 20 ? 'medium' : 'low';
+    const riskLevel: ServiceRisk['riskLevel'] = risk > 60 ? 'critical' : risk > 40 ? 'high' : risk > 20 ? 'medium' : 'low';
 
     const recommendations: Record<string, string> = {
       critical: 'Block release — critical issues must be resolved before deployment',
