@@ -151,7 +151,7 @@ export default function SettingsPage() {
   };
 
   // branding state (from shared context)
-  const { brandName, setBrandName, brandTheme, setBrandTheme, brandLogo, setBrandLogo, brandLogoName, setBrandLogoName } = useBranding();
+  const { brandName, setBrandName, brandTheme, setBrandTheme, brandLogo, setBrandLogo, brandLogoName, setBrandLogoName, primaryColor, setPrimaryColor } = useBranding();
 
   // governance state
   const { aiMode: decisionMode, setAiMode: setDecisionMode } = useDemoMode();
