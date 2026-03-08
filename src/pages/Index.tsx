@@ -311,6 +311,27 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FlakyTestCard />
         </div>
+
+        {/* Compare Releases Quick Links */}
+        <div className="dashboard-card bg-accent/5 border-accent/20">
+          <div className="flex items-center gap-2 mb-3">
+            <GitCompareArrows size={16} className="text-accent" />
+            <span className="text-sm font-semibold text-foreground">Compare Releases</span>
+            <span className="text-[10px] text-muted-foreground ml-1">— Side-by-side analysis across versions</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {compareLinks.map(link => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-secondary/50 border border-border hover:border-accent/40 hover:bg-accent/10 transition-all group"
+              >
+                <link.icon size={14} className="text-muted-foreground group-hover:text-accent transition-colors" />
+                <span className="text-xs font-medium text-foreground group-hover:text-accent transition-colors">{link.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
