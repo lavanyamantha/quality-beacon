@@ -21,6 +21,10 @@ interface Integration {
   name: string;
   type: string;
   url: string;
+  authType: 'pat' | 'api-key' | 'oauth';
+  authLabel: string;
+  authPlaceholder: string;
+  token: string;
   status: 'connected' | 'disconnected' | 'error';
   lastSync?: string;
 }
@@ -53,9 +57,9 @@ interface NotificationChannel {
 
 /* ─── mock state ─── */
 const initialIntegrations: Integration[] = [
-  { id: '1', name: 'Azure DevOps', type: 'azure-devops', url: 'https://dev.azure.com/myorg', status: 'connected', lastSync: '2026-03-08 09:14' },
-  { id: '2', name: 'Jira Cloud', type: 'jira', url: 'https://myteam.atlassian.net', status: 'disconnected' },
-  { id: '3', name: 'SonarQube', type: 'sonarqube', url: 'https://sonar.internal.com', status: 'connected', lastSync: '2026-03-08 08:30' },
+  { id: '1', name: 'Azure DevOps', type: 'azure-devops', url: 'https://dev.azure.com/myorg', authType: 'pat', authLabel: 'Personal Access Token (PAT)', authPlaceholder: 'Enter your Azure DevOps PAT', token: '', status: 'connected', lastSync: '2026-03-08 09:14' },
+  { id: '2', name: 'Jira Cloud', type: 'jira', url: 'https://myteam.atlassian.net', authType: 'api-key', authLabel: 'API Token', authPlaceholder: 'Enter your Atlassian API token', token: '', status: 'disconnected' },
+  { id: '3', name: 'SonarQube', type: 'sonarqube', url: 'https://sonar.internal.com', authType: 'api-key', authLabel: 'API Key / Token', authPlaceholder: 'Enter your SonarQube token', token: '', status: 'connected', lastSync: '2026-03-08 08:30' },
 ];
 
 const initialProviders: AIProvider[] = [
@@ -118,9 +122,18 @@ export default function SettingsPage() {
   };
 
   const handleTestConnection = (int: Integration) => {
+    // Pre-flight: check token
+    if (!int.token.trim()) {
+      toast({
+        title: 'Credentials Required',
+        description: `Please provide a ${int.authLabel} before testing the connection.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setTestingConnection(prev => ({ ...prev, [int.id]: 'testing' }));
 
-    // Validate URL format and simulate a real connectivity check
     setTimeout(() => {
       let success = false;
       let failReason = '';
@@ -150,7 +163,7 @@ export default function SettingsPage() {
       toast({
         title: success ? 'Connection Successful' : 'Connection Failed',
         description: success
-          ? `${int.name} responded successfully.`
+          ? `${int.name} authenticated and responded successfully.`
           : `${failReason}`,
         variant: success ? undefined : 'destructive',
       });
@@ -228,9 +241,28 @@ export default function SettingsPage() {
                 <Input defaultValue={int.url} className="mt-1 bg-muted/30 border-border text-sm" />
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">Last Sync</Label>
-                <p className="text-sm text-foreground mt-2">{int.lastSync || 'Never'}</p>
+                <Label className="text-xs text-muted-foreground">{int.authLabel}</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    type={showApiKeys[int.id] ? 'text' : 'password'}
+                    value={int.token}
+                    placeholder={int.authPlaceholder}
+                    onChange={e => setIntegrations(prev => prev.map(i => i.id === int.id ? { ...i, token: e.target.value } : i))}
+                    className="bg-muted/30 border-border text-sm font-mono"
+                  />
+                  <Button size="icon" variant="ghost" onClick={() => toggleApiKeyVisibility(int.id)}>
+                    {showApiKeys[int.id] ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {int.type === 'azure-devops' && 'Generate from Azure DevOps → User Settings → Personal Access Tokens'}
+                  {int.type === 'jira' && 'Generate from Atlassian → Account Settings → Security → API Tokens'}
+                  {int.type === 'sonarqube' && 'Generate from SonarQube → My Account → Security → Tokens'}
+                </p>
               </div>
+            </div>
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+              <p className="text-xs text-muted-foreground">Last Sync: {int.lastSync || 'Never'}</p>
             </div>
           </CardContent>
         </Card>
