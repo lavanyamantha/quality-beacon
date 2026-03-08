@@ -192,6 +192,10 @@ export default function SettingsPage() {
           'sonarqube': ['sonarqube', 'sonar'],
           'github': ['github.com'],
           'aws': ['amazonaws.com', 'aws.amazon.com'],
+          'gitlab': ['gitlab.com', 'gitlab'],
+          'jenkins': ['jenkins'],
+          'selenium-grid': ['selenium'],
+          'bitbucket': ['bitbucket.org'],
         };
         const allowed = validDomains[int.type] || [];
         const domainMatch = allowed.some(d => parsed.hostname.includes(d));
@@ -201,7 +205,31 @@ export default function SettingsPage() {
         } else if (int.status !== 'connected') {
           failReason = `Integration is not connected. Connect first, then test.`;
         } else {
-          success = true;
+          // Validate token format per provider
+          const token = int.token.trim();
+          const tokenRules: Record<string, { minLength: number; pattern?: RegExp; hint: string }> = {
+            'azure-devops': { minLength: 52, hint: 'Azure DevOps PATs are typically 52+ characters.' },
+            'jira': { minLength: 24, hint: 'Atlassian API tokens are typically 24+ characters.' },
+            'sonarqube': { minLength: 20, hint: 'SonarQube tokens are typically 20+ characters.' },
+            'github': { minLength: 40, pattern: /^(ghp_|github_pat_|gh[ops]_)/, hint: 'GitHub PATs start with ghp_, github_pat_, gho_, ghs_, or ghp_ and are 40+ characters.' },
+            'aws': { minLength: 16, pattern: /^AK/, hint: 'AWS Access Key IDs start with "AK" and are 16+ characters.' },
+            'gitlab': { minLength: 20, pattern: /^glpat-/, hint: 'GitLab PATs start with "glpat-" and are 20+ characters.' },
+            'bitbucket': { minLength: 20, hint: 'Bitbucket app passwords are typically 20+ characters.' },
+          };
+          const rule = tokenRules[int.type];
+          if (rule) {
+            if (token.length < rule.minLength) {
+              failReason = `Invalid credentials: token is too short. ${rule.hint}`;
+            } else if (rule.pattern && !rule.pattern.test(token)) {
+              failReason = `Invalid credentials format. ${rule.hint}`;
+            } else {
+              // Simulate an API auth call — randomly succeed (this is still mock)
+              success = true;
+            }
+          } else {
+            success = token.length >= 10;
+            if (!success) failReason = 'Token appears too short to be valid.';
+          }
         }
       } catch {
         failReason = 'Invalid URL format. Please enter a valid URL.';
@@ -212,7 +240,7 @@ export default function SettingsPage() {
         title: success ? 'Connection Successful' : 'Connection Failed',
         description: success
           ? `${int.name} authenticated and responded successfully.`
-          : `${failReason}`,
+          : failReason,
         variant: success ? undefined : 'destructive',
       });
       setTimeout(() => {
