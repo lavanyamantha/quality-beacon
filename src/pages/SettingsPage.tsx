@@ -579,7 +579,6 @@ export default function SettingsPage() {
                   id: String(Date.now()),
                   provider: newAIProvider,
                   model: newAIModel,
-                  apiKey: newAIApiKey,
                   temperature: 0.3,
                   maxTokens: 4096,
                   assignedTo: [],
@@ -587,7 +586,7 @@ export default function SettingsPage() {
                 };
                 setProviders(prev => [...prev, newProvider]);
                 setAddProviderDialogOpen(false);
-                toast({ title: 'Provider Added', description: `${newAIProvider} / ${newAIModel} has been added.` });
+                toast({ title: 'Provider Added', description: `${newAIProvider} / ${newAIModel} added. Configure the API key in server/.env` });
               }}
             >
               Add Provider
