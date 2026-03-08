@@ -123,24 +123,28 @@ export default function TestAnalyticsPage() {
           label="Total Tests"
           value={latest.total.toLocaleString()}
           delta={compareLatest ? ((latest.total - compareLatest.total) / compareLatest.total) * 100 : undefined}
+          href={buildTestQueryUrl()}
         />
         <StatCard
           label="Passed"
           value={latest.passed.toLocaleString()}
           color="text-success"
           delta={compareLatest ? ((latest.passed - compareLatest.passed) / compareLatest.passed) * 100 : undefined}
+          href={buildTestQueryUrl({ outcome: 'passed' })}
         />
         <StatCard
           label="Failed"
           value={latest.failed.toLocaleString()}
           color="text-destructive"
           delta={compareLatest ? ((latest.failed - compareLatest.failed) / compareLatest.failed) * 100 : undefined}
+          href={buildTestQueryUrl({ outcome: 'failed' })}
         />
         <StatCard
           label="Pass Rate"
           value={`${passRate.toFixed(1)}%`}
           color="text-primary"
           delta={comparePassRate ? passRate - comparePassRate : undefined}
+          href={buildTestQueryUrl()}
         />
       </div>
 
