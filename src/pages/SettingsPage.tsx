@@ -232,9 +232,28 @@ export default function SettingsPage() {
                 <Input defaultValue={int.url} className="mt-1 bg-muted/30 border-border text-sm" />
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">Last Sync</Label>
-                <p className="text-sm text-foreground mt-2">{int.lastSync || 'Never'}</p>
+                <Label className="text-xs text-muted-foreground">{int.authLabel}</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    type={showApiKeys[int.id] ? 'text' : 'password'}
+                    value={int.token}
+                    placeholder={int.authPlaceholder}
+                    onChange={e => setIntegrations(prev => prev.map(i => i.id === int.id ? { ...i, token: e.target.value } : i))}
+                    className="bg-muted/30 border-border text-sm font-mono"
+                  />
+                  <Button size="icon" variant="ghost" onClick={() => toggleApiKeyVisibility(int.id)}>
+                    {showApiKeys[int.id] ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {int.type === 'azure-devops' && 'Generate from Azure DevOps → User Settings → Personal Access Tokens'}
+                  {int.type === 'jira' && 'Generate from Atlassian → Account Settings → Security → API Tokens'}
+                  {int.type === 'sonarqube' && 'Generate from SonarQube → My Account → Security → Tokens'}
+                </p>
               </div>
+            </div>
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+              <p className="text-xs text-muted-foreground">Last Sync: {int.lastSync || 'Never'}</p>
             </div>
           </CardContent>
         </Card>
