@@ -32,6 +32,7 @@ const App = () => (
       <DemoModeProvider>
         <ReleaseProvider>
         <IntegrationsProvider>
+        <ServiceHealthConfigProvider>
         <BrandingProvider>
           <Toaster />
           <Sonner />
