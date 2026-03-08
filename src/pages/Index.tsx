@@ -62,109 +62,148 @@ export default function Dashboard() {
     if (!dashboardRef.current) return;
     setExporting(true);
     try {
-      // Temporarily expand all overflow-hidden containers so nothing is clipped
-      const overflowEls = dashboardRef.current.querySelectorAll<HTMLElement>('[class*="overflow"]');
-      const origStyles: { el: HTMLElement; overflow: string; maxHeight: string }[] = [];
-      overflowEls.forEach(el => {
-        origStyles.push({ el, overflow: el.style.overflow, maxHeight: el.style.maxHeight });
-        el.style.overflow = 'visible';
-        el.style.maxHeight = 'none';
+      const el = dashboardRef.current;
+
+      // Clone the dashboard into an offscreen container at a fixed wide width
+      // so the 3-column grid renders properly without overlap
+      const clone = el.cloneNode(true) as HTMLElement;
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:1400px;background:#0a0a0f;padding:24px;';
+      wrapper.appendChild(clone);
+      document.body.appendChild(wrapper);
+
+      // Expand all overflow-hidden elements in the clone
+      clone.querySelectorAll<HTMLElement>('[class*="overflow"]').forEach(child => {
+        child.style.overflow = 'visible';
+        child.style.maxHeight = 'none';
+      });
+      // Ensure truncated text is fully visible
+      clone.querySelectorAll<HTMLElement>('[class*="truncate"]').forEach(child => {
+        child.style.overflow = 'visible';
+        child.style.textOverflow = 'unset';
+        child.style.whiteSpace = 'normal';
       });
 
-      const canvas = await html2canvas(dashboardRef.current, {
+      // Wait a tick for layout to settle
+      await new Promise(r => setTimeout(r, 100));
+
+      const canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#0a0a0f',
         logging: false,
-        windowWidth: dashboardRef.current.scrollWidth,
-        windowHeight: dashboardRef.current.scrollHeight,
+        width: 1400,
+        windowWidth: 1400,
       });
 
-      // Restore original styles
-      origStyles.forEach(({ el, overflow, maxHeight }) => {
-        el.style.overflow = overflow;
-        el.style.maxHeight = maxHeight;
-      });
+      document.body.removeChild(wrapper);
 
-      const pageWidth = 595; // A4 width in points
-      const pageHeight = 842; // A4 height in points
-      const margin = 40;
+      // Use landscape A4 for better fit
+      const pageWidth = 842;  // A4 landscape width in pt
+      const pageHeight = 595; // A4 landscape height in pt
+      const margin = 36;
       const contentWidth = pageWidth - margin * 2;
+      const headerHeight = 90;
 
       const exportDate = new Date();
       const dateStr = exportDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
       const timeStr = exportDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
 
-      // --- Header ---
-      pdf.setFillColor(15, 15, 25);
-      pdf.rect(0, 0, pageWidth, 120, 'F');
+      // --- Header on first page ---
+      const drawHeader = () => {
+        pdf.setFillColor(15, 15, 25);
+        pdf.rect(0, 0, pageWidth, headerHeight, 'F');
 
-      // Title
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(18);
-      pdf.setTextColor(255, 255, 255);
-      pdf.text(brandName, margin, 45);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(16);
+        pdf.setTextColor(255, 255, 255);
+        pdf.text(brandName, margin, 30);
 
-      // Subtitle
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(10);
-      pdf.setTextColor(160, 160, 180);
-      pdf.text('Quality Command Center — Dashboard Report', margin, 62);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        pdf.setTextColor(160, 160, 180);
+        pdf.text('Quality Command Center — Dashboard Report', margin, 46);
 
-      // Metadata line
-      pdf.setFontSize(9);
-      pdf.setTextColor(120, 120, 140);
-      const metaItems = [
-        `Release: ${activeRelease.version} (${activeRelease.name})`,
-        `Status: ${activeRelease.status.toUpperCase()}`,
-        `Environment: ${selectedEnv}`,
-      ];
-      pdf.text(metaItems.join('   •   '), margin, 82);
+        pdf.setFontSize(8);
+        pdf.setTextColor(120, 120, 140);
+        const meta = [
+          `Release: ${activeRelease.version} (${activeRelease.name})`,
+          `Status: ${activeRelease.status.toUpperCase()}`,
+          `Environment: ${selectedEnv}`,
+          `Exported: ${dateStr} at ${timeStr}`,
+        ];
+        pdf.text(meta.join('    •    '), margin, 62);
 
-      // Export date
-      pdf.text(`Exported: ${dateStr} at ${timeStr}`, margin, 98);
+        pdf.setDrawColor(60, 60, 80);
+        pdf.setLineWidth(0.5);
+        pdf.line(margin, headerHeight - 6, pageWidth - margin, headerHeight - 6);
+      };
 
-      // Divider line
-      pdf.setDrawColor(60, 60, 80);
-      pdf.setLineWidth(0.5);
-      pdf.line(margin, 112, pageWidth - margin, 112);
+      const drawFooter = (pageNum: number, totalPages: number) => {
+        pdf.setFontSize(7);
+        pdf.setTextColor(100, 100, 120);
+        pdf.text(`${brandName} — Confidential`, margin, pageHeight - 16);
+        pdf.text(`Page ${pageNum} of ${totalPages}`, pageWidth - margin - 55, pageHeight - 16);
+      };
 
-      // --- Dashboard snapshot ---
+      // --- Render dashboard image across pages ---
       const imgData = canvas.toDataURL('image/png');
       const imgAspect = canvas.height / canvas.width;
       const imgWidth = contentWidth;
       const imgHeight = imgWidth * imgAspect;
 
-      const startY = 130;
-      const availableHeight = pageHeight - startY - margin;
+      const firstPageContentHeight = pageHeight - headerHeight - margin - 30; // space after header
+      const subsequentPageContentHeight = pageHeight - margin * 2 - 20;
 
-      if (imgHeight <= availableHeight) {
-        pdf.addImage(imgData, 'PNG', margin, startY, imgWidth, imgHeight);
-      } else {
-        // Multi-page: slice the canvas image across pages
-        const totalPages = Math.ceil(imgHeight / availableHeight);
-        for (let page = 0; page < totalPages; page++) {
-          if (page > 0) pdf.addPage();
-          const yOffset = page === 0 ? startY : margin;
-          const sliceHeight = page === 0 ? availableHeight : pageHeight - margin * 2;
-          // Use negative y to shift the image up for subsequent pages
-          const imgYOffset = yOffset - (page === 0 ? 0 : (availableHeight + (page - 1) * (pageHeight - margin * 2)));
-          pdf.addImage(imgData, 'PNG', margin, imgYOffset, imgWidth, imgHeight);
-        }
+      // Calculate how many pages we need
+      let remainingHeight = imgHeight;
+      const pageSlices: { srcY: number; sliceH: number; destY: number }[] = [];
+
+      // First page
+      const firstSlice = Math.min(remainingHeight, firstPageContentHeight);
+      pageSlices.push({ srcY: 0, sliceH: firstSlice, destY: headerHeight + 6 });
+      remainingHeight -= firstSlice;
+
+      // Subsequent pages
+      while (remainingHeight > 0) {
+        const slice = Math.min(remainingHeight, subsequentPageContentHeight);
+        pageSlices.push({ srcY: imgHeight - remainingHeight, sliceH: slice, destY: margin });
+        remainingHeight -= slice;
       }
 
-      // --- Footer on last page ---
-      const lastPageY = pageHeight - 25;
-      pdf.setFontSize(7);
-      pdf.setTextColor(100, 100, 120);
-      pdf.text(`${brandName} — Confidential`, margin, lastPageY);
-      pdf.text(`Page 1 of ${pdf.getNumberOfPages()}`, pageWidth - margin - 50, lastPageY);
+      const totalPages = pageSlices.length;
+
+      for (let i = 0; i < pageSlices.length; i++) {
+        if (i > 0) pdf.addPage();
+
+        if (i === 0) drawHeader();
+
+        const { srcY, sliceH, destY } = pageSlices[i];
+
+        // Create a temp canvas for this slice
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvas.width;
+        // Map slice coordinates back to source canvas pixels
+        const srcPixelY = Math.round((srcY / imgHeight) * canvas.height);
+        const srcPixelH = Math.round((sliceH / imgHeight) * canvas.height);
+        sliceCanvas.height = srcPixelH;
+        const ctx = sliceCanvas.getContext('2d')!;
+        ctx.drawImage(canvas, 0, srcPixelY, canvas.width, srcPixelH, 0, 0, canvas.width, srcPixelH);
+
+        const sliceData = sliceCanvas.toDataURL('image/png');
+        const sliceAspect = srcPixelH / canvas.width;
+        const renderH = imgWidth * sliceAspect;
+        pdf.addImage(sliceData, 'PNG', margin, destY, imgWidth, renderH);
+
+        drawFooter(i + 1, totalPages);
+      }
 
       pdf.save(`dashboard-${activeRelease.version}-${selectedEnv}-${new Date().toISOString().slice(0, 10)}.pdf`);
       toast({ title: 'PDF exported', description: `Dashboard report for ${activeRelease.version} (${selectedEnv}) saved.` });
-    } catch {
+    } catch (err) {
+      console.error('PDF export error:', err);
       toast({ title: 'Export failed', description: 'Could not generate PDF. Please try again.', variant: 'destructive' });
     } finally {
       setExporting(false);
