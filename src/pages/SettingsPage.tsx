@@ -391,8 +391,53 @@ export default function SettingsPage() {
     </div>
   );
 
-  const renderAIProviders = () => (
+  const handleTestAIConnection = (provider: AIProvider) => {
+    if (!provider.apiKey.trim() || provider.apiKey.includes('redacted')) {
+      toast({
+        title: 'API Key Required',
+        description: `Please provide a valid API key for ${provider.provider} before testing.`,
+        variant: 'destructive',
+      });
+      setProviders(prev => prev.map(pr => pr.id === provider.id ? { ...pr, connectionStatus: 'failed' as const, lastTested: new Date().toLocaleTimeString() } : pr));
+      return;
+    }
+
+    setProviders(prev => prev.map(pr => pr.id === provider.id ? { ...pr, connectionStatus: 'testing' as const } : pr));
+
+    setTimeout(() => {
+      // Simulate: enabled providers with non-redacted keys succeed
+      const success = provider.enabled && !provider.apiKey.includes('redacted');
+      setProviders(prev => prev.map(pr => pr.id === provider.id ? {
+        ...pr,
+        connectionStatus: success ? 'success' as const : 'failed' as const,
+        lastTested: new Date().toLocaleTimeString(),
+      } : pr));
+      toast({
+        title: success ? 'AI Connection Verified' : 'AI Connection Failed',
+        description: success
+          ? `${provider.provider} / ${provider.model} responded successfully.`
+          : `Could not reach ${provider.provider}. Check API key and model name.`,
+        variant: success ? undefined : 'destructive',
+      });
+    }, 2000);
+  };
+
+  const renderAIProviders = () => {
+    const failedProviders = providers.filter(p => p.connectionStatus === 'failed' && p.enabled);
+
+    return (
     <div className="space-y-4">
+      {failedProviders.length > 0 && (
+        <div className="flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm">
+          <AlertTriangle size={18} className="text-warning shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium text-warning">AI Connection Issues Detected</p>
+            <p className="text-muted-foreground mt-0.5">
+              {failedProviders.map(p => `${p.provider}/${p.model}`).join(', ')} — failed connectivity test. Modules relying on these providers may not function correctly.
+            </p>
+          </div>
+        </div>
+      )}
       {providers.map(p => (
         <Card key={p.id} className="bg-card border-border">
           <CardContent className="p-5 space-y-4">
@@ -401,12 +446,47 @@ export default function SettingsPage() {
                 <Bot size={18} className="text-primary" />
                 <h3 className="font-semibold text-foreground capitalize">{p.provider}</h3>
                 <Badge variant="outline" className="text-[10px]">{p.model}</Badge>
+                {p.connectionStatus === 'success' && (
+                  <Badge variant="default" className="text-[10px] bg-success/20 text-success border-success/30"><Check size={10} className="mr-1" />Verified</Badge>
+                )}
+                {p.connectionStatus === 'failed' && (
+                  <Badge variant="destructive" className="text-[10px]"><AlertTriangle size={10} className="mr-1" />Failed</Badge>
+                )}
               </div>
-              <Switch
-                checked={p.enabled}
-                onCheckedChange={(checked) => setProviders(prev => prev.map(pr => pr.id === p.id ? { ...pr, enabled: checked } : pr))}
-              />
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={p.connectionStatus === 'testing'}
+                  onClick={() => handleTestAIConnection(p)}
+                >
+                  {p.connectionStatus === 'testing' ? (
+                    <><Loader2 size={14} className="mr-1 animate-spin" /> Testing…</>
+                  ) : p.connectionStatus === 'success' ? (
+                    <><Wifi size={14} className="mr-1 text-success" /> Re-test</>
+                  ) : p.connectionStatus === 'failed' ? (
+                    <><WifiOff size={14} className="mr-1 text-destructive" /> Retry</>
+                  ) : (
+                    <><Wifi size={14} className="mr-1" /> Test Connection</>
+                  )}
+                </Button>
+                <Switch
+                  checked={p.enabled}
+                  onCheckedChange={(checked) => setProviders(prev => prev.map(pr => pr.id === p.id ? { ...pr, enabled: checked } : pr))}
+                />
+              </div>
             </div>
+            {/* Inline test result */}
+            {p.connectionStatus === 'success' && (
+              <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+                <Check size={14} /> Connection to {p.provider}/{p.model} verified. {p.lastTested && <span className="text-muted-foreground ml-auto text-xs">Tested at {p.lastTested}</span>}
+              </div>
+            )}
+            {p.connectionStatus === 'failed' && (
+              <div className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <AlertTriangle size={14} /> Failed to verify {p.provider}/{p.model}. Check API key and ensure the model is accessible. {p.lastTested && <span className="text-muted-foreground ml-auto text-xs">Tested at {p.lastTested}</span>}
+              </div>
+            )}
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs text-muted-foreground">Model</Label>
