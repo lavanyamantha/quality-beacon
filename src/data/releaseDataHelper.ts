@@ -1,4 +1,4 @@
-import { Release, testExecutions, defects, flakyTests, pipelines, microservices, readinessMetrics, readinessTrend, aiAdvisorRecommendation } from './mockData';
+import { Release, testExecutions, defects, flakyTests, pipelines, microservices, readinessMetrics, readinessTrend, aiAdvisorRecommendation, coverageByService, releaseTimeline, defectsByRelease } from './mockData';
 
 // Simple seeded multiplier based on release readiness score
 function vary(base: number, release: Release, factor = 0.15): number {
