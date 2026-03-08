@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import ReadinessGauge from '@/components/dashboard/ReadinessGauge';
 import AIAdvisorCard from '@/components/dashboard/AIAdvisorCard';
@@ -9,6 +10,11 @@ import FlakyTestCard from '@/components/dashboard/FlakyTestCard';
 import ReadinessTrendCard from '@/components/dashboard/ReadinessTrendCard';
 import { Database, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { releases } from '@/data/mockData';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+
+const environments = ['All', 'Dev', 'QA', 'Stage', 'Prod'];
 
 function NoDataPlaceholder() {
   return (
@@ -32,15 +38,26 @@ function NoDataPlaceholder() {
   );
 }
 
+const statusColor: Record<string, string> = {
+  released: 'bg-success/20 text-success',
+  ready: 'bg-primary/20 text-primary',
+  risk: 'bg-warning/20 text-warning',
+  blocked: 'bg-destructive/20 text-destructive',
+};
+
 export default function Dashboard() {
   const { demoMode } = useDemoMode();
+  const [selectedRelease, setSelectedRelease] = useState(releases.find(r => r.status === 'risk')?.id || releases[0].id);
+  const [selectedEnv, setSelectedEnv] = useState('All');
+
+  const activeRelease = releases.find(r => r.id === selectedRelease) || releases[0];
 
   if (!demoMode) {
     return (
       <div className="space-y-6">
         <div>
           <h1 className="text-xl font-bold text-foreground">Quality Command Center</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Real-time quality intelligence for Release 2026.04</p>
+          <p className="text-sm text-muted-foreground mt-0.5">No release data — connect integrations or enable demo mode</p>
         </div>
         <NoDataPlaceholder />
       </div>
@@ -49,9 +66,42 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Quality Command Center</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Real-time quality intelligence for Release 2026.04</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-foreground">Quality Command Center</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Real-time quality intelligence for {activeRelease.name}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Select value={selectedRelease} onValueChange={setSelectedRelease}>
+            <SelectTrigger className="w-[200px] h-9 text-xs">
+              <SelectValue placeholder="Select Release" />
+            </SelectTrigger>
+            <SelectContent>
+              {releases.map(r => (
+                <SelectItem key={r.id} value={r.id}>
+                  <span className="flex items-center gap-2">
+                    {r.version}
+                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${statusColor[r.status]}`}>
+                      {r.status}
+                    </Badge>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedEnv} onValueChange={setSelectedEnv}>
+            <SelectTrigger className="w-[130px] h-9 text-xs">
+              <SelectValue placeholder="Environment" />
+            </SelectTrigger>
+            <SelectContent>
+              {environments.map(env => (
+                <SelectItem key={env} value={env}>{env}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
