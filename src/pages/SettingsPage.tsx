@@ -311,17 +311,13 @@ export default function SettingsPage() {
             {newProviderType && (() => {
               const p = availableProviders[newProviderType];
               return (
-                <>
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1.5 block">URL</Label>
-                    <Input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder={p.urlPlaceholder} className="bg-muted/30 border-border text-sm" />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1.5 block">{p.authLabel}</Label>
-                    <Input type="password" value={newToken} onChange={e => setNewToken(e.target.value)} placeholder={p.authPlaceholder} className="bg-muted/30 border-border text-sm font-mono" />
-                    <p className="text-[10px] text-muted-foreground mt-1">{p.helpText}</p>
-                  </div>
-                </>
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">URL</Label>
+                  <Input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder={p.urlPlaceholder} className="bg-muted/30 border-border text-sm" />
+                  <p className="text-[10px] text-muted-foreground mt-1 italic">
+                    Credentials should be configured in <code className="text-primary">server/.env</code> — they are never stored in the browser.
+                  </p>
+                </div>
               );
             })()}
           </div>
@@ -336,15 +332,11 @@ export default function SettingsPage() {
                   name: p.name,
                   type: p.type,
                   url: newUrl,
-                  authType: p.authType,
-                  authLabel: p.authLabel,
-                  authPlaceholder: p.authPlaceholder,
-                  token: newToken,
                   status: 'disconnected',
                 };
                 setIntegrations(prev => [...prev, newIntegration]);
                 setAddDialogOpen(false);
-                toast({ title: 'Integration Added', description: `${p.name} has been added. Connect and test to verify.` });
+                toast({ title: 'Integration Added', description: `${p.name} has been added. Configure credentials in server/.env and test the connection.` });
               }}
             >
               Add Integration
