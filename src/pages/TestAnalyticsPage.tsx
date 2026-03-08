@@ -75,6 +75,8 @@ export default function TestAnalyticsPage() {
     }
   }, [testSource]);
 
+  if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Test Analytics</h1><p className="text-sm text-muted-foreground mt-0.5">Test execution trends and metrics</p></div><NoDataPlaceholder title="Test Analytics" /></div>);
+
   const testExecutions = getTestExecutionsForRelease(activeRelease);
   const latest = testExecutions[testExecutions.length - 1];
   const passRate = (latest.passed / latest.total) * 100;
