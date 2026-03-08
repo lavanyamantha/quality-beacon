@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useRelease } from '@/contexts/ReleaseContext';
 import ReadinessGauge from '@/components/dashboard/ReadinessGauge';
@@ -8,11 +9,15 @@ import DefectSummaryCard from '@/components/dashboard/DefectSummaryCard';
 import PipelineStatusCard from '@/components/dashboard/PipelineStatusCard';
 import FlakyTestCard from '@/components/dashboard/FlakyTestCard';
 import ReadinessTrendCard from '@/components/dashboard/ReadinessTrendCard';
-import { Database, Settings } from 'lucide-react';
+import { Database, Settings, Download, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { releases } from '@/data/mockData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const environments = ['All', 'Dev', 'QA', 'Stage', 'Prod'];
 
@@ -48,6 +53,34 @@ const statusColor: Record<string, string> = {
 export default function Dashboard() {
   const { demoMode } = useDemoMode();
   const { selectedReleaseId, selectedEnv, setSelectedReleaseId, setSelectedEnv, activeRelease } = useRelease();
+  const dashboardRef = useRef<HTMLDivElement>(null);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportPDF = async () => {
+    if (!dashboardRef.current) return;
+    setExporting(true);
+    try {
+      const canvas = await html2canvas(dashboardRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#0a0a0f',
+        logging: false,
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [canvas.width, canvas.height],
+      });
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`dashboard-${activeRelease.version}-${selectedEnv}-${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast({ title: 'PDF exported', description: `Dashboard snapshot for ${activeRelease.version} (${selectedEnv}) saved.` });
+    } catch {
+      toast({ title: 'Export failed', description: 'Could not generate PDF. Please try again.', variant: 'destructive' });
+    } finally {
+      setExporting(false);
+    }
+  };
 
   if (!demoMode) {
     return (
@@ -98,27 +131,33 @@ export default function Dashboard() {
               ))}
             </SelectContent>
           </Select>
+          <Button size="sm" variant="outline" className="h-9 text-xs" onClick={handleExportPDF} disabled={exporting}>
+            {exporting ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : <Download size={14} className="mr-1.5" />}
+            {exporting ? 'Exporting…' : 'Export PDF'}
+          </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <ReadinessGauge />
-        <AIAdvisorCard />
-      </div>
+      <div ref={dashboardRef} className="space-y-4">
+        <div className="grid grid-cols-3 gap-4">
+          <ReadinessGauge />
+          <AIAdvisorCard />
+        </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <TestSummaryCard />
-        <DefectSummaryCard />
-        <ReadinessTrendCard />
-      </div>
+        <div className="grid grid-cols-3 gap-4">
+          <TestSummaryCard />
+          <DefectSummaryCard />
+          <ReadinessTrendCard />
+        </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <ServiceHealthGrid />
-        <PipelineStatusCard />
-      </div>
+        <div className="grid grid-cols-3 gap-4">
+          <ServiceHealthGrid />
+          <PipelineStatusCard />
+        </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <FlakyTestCard />
+        <div className="grid grid-cols-3 gap-4">
+          <FlakyTestCard />
+        </div>
       </div>
     </div>
   );
