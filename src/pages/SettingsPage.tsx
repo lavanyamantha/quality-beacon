@@ -5,7 +5,7 @@ import { useIntegrations } from '@/contexts/IntegrationsContext';
 import { isProxyEnabled, proxyTestConnection } from '@/services/proxyClient';
 import {
   Settings, Link2, Bot, Server, Users, Palette, Bell, Database, Shield, Activity,
-  ChevronLeft, Plus, Trash2, Save, Eye, EyeOff, ToggleLeft, ToggleRight,
+  ChevronLeft, Plus, Trash2, Save, ToggleLeft, ToggleRight,
   Check, AlertTriangle, Loader2, Wifi, WifiOff, RefreshCw, ExternalLink, Lock
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,7 +34,6 @@ interface AIProvider {
   id: string;
   provider: string;
   model: string;
-  apiKey: string;
   temperature: number;
   maxTokens: number;
   assignedTo: string[];
@@ -69,8 +68,8 @@ const initialIntegrations: Integration[] = [
 ];
 
 const initialProviders: AIProvider[] = [
-  { id: '1', provider: 'openai', model: 'gpt-4o', apiKey: 'sk-...redacted', temperature: 0.3, maxTokens: 4096, assignedTo: ['risk-prediction', 'qa-assistant'], enabled: true, connectionStatus: 'untested' },
-  { id: '2', provider: 'anthropic', model: 'claude-3.5-sonnet', apiKey: 'sk-ant-...redacted', temperature: 0.2, maxTokens: 4096, assignedTo: ['defect-analysis'], enabled: false, connectionStatus: 'untested' },
+  { id: '1', provider: 'openai', model: 'gpt-4o', temperature: 0.3, maxTokens: 4096, assignedTo: ['risk-prediction', 'qa-assistant'], enabled: true, connectionStatus: 'untested' },
+  { id: '2', provider: 'anthropic', model: 'claude-3.5-sonnet', temperature: 0.2, maxTokens: 4096, assignedTo: ['defect-analysis'], enabled: false, connectionStatus: 'untested' },
 ];
 
 const initialEnvironments: Environment[] = [
@@ -120,7 +119,7 @@ export default function SettingsPage() {
   const [environments, setEnvironments] = useState(initialEnvironments);
   const [channels, setChannels] = useState(initialChannels);
   const { demoMode, setDemoMode } = useDemoMode();
-  const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({});
+  
   const [testingConnection, setTestingConnection] = useState<Record<string, 'idle' | 'testing' | 'success' | 'failed'>>({});
   const { updateStatus: updateIntegrationStatus } = useIntegrations();
   const proxyEnabled = isProxyEnabled();
@@ -141,7 +140,6 @@ export default function SettingsPage() {
   const [addProviderDialogOpen, setAddProviderDialogOpen] = useState(false);
   const [newAIProvider, setNewAIProvider] = useState('openai');
   const [newAIModel, setNewAIModel] = useState('');
-  const [newAIApiKey, setNewAIApiKey] = useState('');
 
   // known models per provider (users can also type custom ones)
   const knownModels: Record<string, string[]> = {
@@ -212,9 +210,6 @@ export default function SettingsPage() {
     setTimeout(() => setTestingConnection(prev => ({ ...prev, [int.id]: 'idle' })), 5000);
   };
 
-  const toggleApiKeyVisibility = (id: string) => {
-    setShowApiKeys(prev => ({ ...prev, [id]: !prev[id] }));
-  };
 
   const statusColor = (s: string) =>
     s === 'connected' ? 'text-success' : s === 'error' ? 'text-destructive' : 'text-muted-foreground';
@@ -352,35 +347,48 @@ export default function SettingsPage() {
     </div>
   );
 
-  const handleTestAIConnection = (provider: AIProvider) => {
-    if (!provider.apiKey.trim() || provider.apiKey.includes('redacted')) {
-      toast({
-        title: 'API Key Required',
-        description: `Please provide a valid API key for ${provider.provider} before testing.`,
-        variant: 'destructive',
-      });
-      setProviders(prev => prev.map(pr => pr.id === provider.id ? { ...pr, connectionStatus: 'failed' as const, lastTested: new Date().toLocaleTimeString() } : pr));
-      return;
-    }
-
+  const handleTestAIConnection = async (provider: AIProvider) => {
     setProviders(prev => prev.map(pr => pr.id === provider.id ? { ...pr, connectionStatus: 'testing' as const } : pr));
 
-    setTimeout(() => {
-      // Simulate: enabled providers with non-redacted keys succeed
-      const success = provider.enabled && !provider.apiKey.includes('redacted');
+    if (proxyEnabled) {
+      try {
+        // Test AI provider through the proxy
+        const result = await proxyTestConnection(`ai-${provider.provider}`);
+        const success = result.ok;
+        setProviders(prev => prev.map(pr => pr.id === provider.id ? {
+          ...pr,
+          connectionStatus: success ? 'success' as const : 'failed' as const,
+          lastTested: new Date().toLocaleTimeString(),
+        } : pr));
+        toast({
+          title: success ? 'AI Connection Verified' : 'AI Connection Failed',
+          description: success
+            ? `${provider.provider} / ${provider.model} responded successfully${result.responseTimeMs ? ` (${result.responseTimeMs}ms)` : ''}.`
+            : result.error || `Could not reach ${provider.provider}.`,
+          variant: success ? undefined : 'destructive',
+        });
+      } catch {
+        setProviders(prev => prev.map(pr => pr.id === provider.id ? {
+          ...pr,
+          connectionStatus: 'failed' as const,
+          lastTested: new Date().toLocaleTimeString(),
+        } : pr));
+        toast({ title: 'Connection Failed', description: 'Could not reach proxy server. Is it running?', variant: 'destructive' });
+      }
+    } else {
+      // No proxy — simulate and guide
+      await new Promise(r => setTimeout(r, 1500));
       setProviders(prev => prev.map(pr => pr.id === provider.id ? {
         ...pr,
-        connectionStatus: success ? 'success' as const : 'failed' as const,
+        connectionStatus: 'failed' as const,
         lastTested: new Date().toLocaleTimeString(),
       } : pr));
       toast({
-        title: success ? 'AI Connection Verified' : 'AI Connection Failed',
-        description: success
-          ? `${provider.provider} / ${provider.model} responded successfully.`
-          : `Could not reach ${provider.provider}. Check API key and model name.`,
-        variant: success ? undefined : 'destructive',
+        title: 'Proxy Not Configured',
+        description: 'Set VITE_PROXY_URL and run the proxy server to enable AI connection testing. API keys are managed server-side.',
+        variant: 'destructive',
       });
-    }, 2000);
+    }
   };
 
   const renderAIProviders = () => {
@@ -468,17 +476,9 @@ export default function SettingsPage() {
                 <p className="text-[10px] text-muted-foreground mt-1">Type a custom model name or pick from suggestions</p>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">API Key</Label>
-                <div className="flex gap-2 mt-1">
-                  <Input
-                    type={showApiKeys[p.id] ? 'text' : 'password'}
-                    defaultValue={p.apiKey}
-                    className="bg-muted/30 border-border text-sm font-mono"
-                  />
-                  <Button size="icon" variant="ghost" onClick={() => toggleApiKeyVisibility(p.id)}>
-                    {showApiKeys[p.id] ? <EyeOff size={14} /> : <Eye size={14} />}
-                  </Button>
-                </div>
+                <p className="text-[10px] text-muted-foreground italic mt-1">
+                  API keys are managed securely on the server. Configure them in <code className="text-primary">server/.env</code>
+                </p>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Temperature: {p.temperature}</Label>
@@ -522,7 +522,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       ))}
-      <Button variant="outline" className="w-full border-dashed" onClick={() => { setNewAIProvider('openai'); setNewAIModel(''); setNewAIApiKey(''); setAddProviderDialogOpen(true); }}>
+      <Button variant="outline" className="w-full border-dashed" onClick={() => { setNewAIProvider('openai'); setNewAIModel(''); setAddProviderDialogOpen(true); }}>
         <Plus size={14} className="mr-2" /> Add AI Provider
       </Button>
 
@@ -562,20 +562,20 @@ export default function SettingsPage() {
               <p className="text-[10px] text-muted-foreground mt-1">Select a known model or type a custom one</p>
             </div>
             <div>
-              <Label className="text-xs text-muted-foreground mb-1.5 block">API Key</Label>
-              <Input type="password" value={newAIApiKey} onChange={e => setNewAIApiKey(e.target.value)} placeholder="Enter API key…" className="bg-muted/30 border-border text-sm font-mono" />
+              <p className="text-[10px] text-muted-foreground italic">
+                API keys should be configured in <code className="text-primary">server/.env</code> — they are never stored in the browser.
+              </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddProviderDialogOpen(false)}>Cancel</Button>
             <Button
-              disabled={!newAIModel.trim() || !newAIApiKey.trim()}
+              disabled={!newAIModel.trim()}
               onClick={() => {
                 const newProvider: AIProvider = {
                   id: String(Date.now()),
                   provider: newAIProvider,
                   model: newAIModel,
-                  apiKey: newAIApiKey,
                   temperature: 0.3,
                   maxTokens: 4096,
                   assignedTo: [],
@@ -583,7 +583,7 @@ export default function SettingsPage() {
                 };
                 setProviders(prev => [...prev, newProvider]);
                 setAddProviderDialogOpen(false);
-                toast({ title: 'Provider Added', description: `${newAIProvider} / ${newAIModel} has been added.` });
+                toast({ title: 'Provider Added', description: `${newAIProvider} / ${newAIModel} added. Configure the API key in server/.env` });
               }}
             >
               Add Provider
