@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 
 /* ─── types ─── */
@@ -96,6 +97,17 @@ const sections = [
 ];
 
 /* ─── component ─── */
+const availableProviders: Record<string, { name: string; type: string; urlPlaceholder: string; authType: Integration['authType']; authLabel: string; authPlaceholder: string; helpText: string }> = {
+  'azure-devops': { name: 'Azure DevOps', type: 'azure-devops', urlPlaceholder: 'https://dev.azure.com/yourorg', authType: 'pat', authLabel: 'Personal Access Token (PAT)', authPlaceholder: 'Enter your Azure DevOps PAT', helpText: 'Azure DevOps → User Settings → Personal Access Tokens' },
+  'jira': { name: 'Jira Cloud', type: 'jira', urlPlaceholder: 'https://yourteam.atlassian.net', authType: 'api-key', authLabel: 'API Token', authPlaceholder: 'Enter your Atlassian API token', helpText: 'Atlassian → Account Settings → Security → API Tokens' },
+  'sonarqube': { name: 'SonarQube', type: 'sonarqube', urlPlaceholder: 'https://sonar.yourcompany.com', authType: 'api-key', authLabel: 'API Key / Token', authPlaceholder: 'Enter your SonarQube token', helpText: 'SonarQube → My Account → Security → Tokens' },
+  'github': { name: 'GitHub', type: 'github', urlPlaceholder: 'https://github.com/yourorg', authType: 'pat', authLabel: 'Personal Access Token (PAT)', authPlaceholder: 'Enter your GitHub PAT', helpText: 'GitHub → Settings → Developer Settings → Personal Access Tokens' },
+  'aws': { name: 'AWS', type: 'aws', urlPlaceholder: 'https://console.aws.amazon.com', authType: 'api-key', authLabel: 'Access Key ID / Secret', authPlaceholder: 'Enter your AWS Access Key ID', helpText: 'AWS → IAM → Security Credentials → Access Keys' },
+  'gitlab': { name: 'GitLab', type: 'gitlab', urlPlaceholder: 'https://gitlab.com/yourorg', authType: 'pat', authLabel: 'Personal Access Token', authPlaceholder: 'Enter your GitLab PAT', helpText: 'GitLab → Preferences → Access Tokens' },
+  'jenkins': { name: 'Jenkins', type: 'jenkins', urlPlaceholder: 'https://jenkins.yourcompany.com', authType: 'api-key', authLabel: 'API Token', authPlaceholder: 'Enter your Jenkins API token', helpText: 'Jenkins → User → Configure → API Token' },
+  'selenium-grid': { name: 'Selenium Grid', type: 'selenium-grid', urlPlaceholder: 'https://selenium.yourcompany.com', authType: 'api-key', authLabel: 'Access Token', authPlaceholder: 'Enter access token (if required)', helpText: 'Selenium Grid Hub URL with optional auth' },
+};
+
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [integrations, setIntegrations] = useState(initialIntegrations);
@@ -105,6 +117,12 @@ export default function SettingsPage() {
   const { demoMode, setDemoMode } = useDemoMode();
   const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({});
   const [testingConnection, setTestingConnection] = useState<Record<string, 'idle' | 'testing' | 'success' | 'failed'>>({});
+
+  // add integration dialog state
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [newProviderType, setNewProviderType] = useState('');
+  const [newUrl, setNewUrl] = useState('');
+  const [newToken, setNewToken] = useState('');
 
   // branding state
   const [brandName, setBrandName] = useState('AI QA Command Center');
@@ -275,9 +293,75 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       ))}
-      <Button variant="outline" className="w-full border-dashed" onClick={() => toast({ title: 'Add Integration', description: 'Integration wizard would open here.' })}>
+      <Button variant="outline" className="w-full border-dashed" onClick={() => { setNewProviderType(''); setNewUrl(''); setNewToken(''); setAddDialogOpen(true); }}>
         <Plus size={14} className="mr-2" /> Add Integration
       </Button>
+
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add New Integration</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">Provider</Label>
+              <Select value={newProviderType} onValueChange={(v) => { setNewProviderType(v); const p = availableProviders[v]; if (p) setNewUrl(p.urlPlaceholder); }}>
+                <SelectTrigger className="bg-muted/30 border-border text-sm">
+                  <SelectValue placeholder="Select a provider…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(availableProviders)
+                    .filter(([key]) => !integrations.some(i => i.type === key))
+                    .map(([key, p]) => (
+                      <SelectItem key={key} value={key}>{p.name}</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {newProviderType && (() => {
+              const p = availableProviders[newProviderType];
+              return (
+                <>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">URL</Label>
+                    <Input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder={p.urlPlaceholder} className="bg-muted/30 border-border text-sm" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">{p.authLabel}</Label>
+                    <Input type="password" value={newToken} onChange={e => setNewToken(e.target.value)} placeholder={p.authPlaceholder} className="bg-muted/30 border-border text-sm font-mono" />
+                    <p className="text-[10px] text-muted-foreground mt-1">{p.helpText}</p>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddDialogOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!newProviderType || !newUrl.trim()}
+              onClick={() => {
+                const p = availableProviders[newProviderType];
+                const newIntegration: Integration = {
+                  id: String(Date.now()),
+                  name: p.name,
+                  type: p.type,
+                  url: newUrl,
+                  authType: p.authType,
+                  authLabel: p.authLabel,
+                  authPlaceholder: p.authPlaceholder,
+                  token: newToken,
+                  status: 'disconnected',
+                };
+                setIntegrations(prev => [...prev, newIntegration]);
+                setAddDialogOpen(false);
+                toast({ title: 'Integration Added', description: `${p.name} has been added. Connect and test to verify.` });
+              }}
+            >
+              Add Integration
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 
