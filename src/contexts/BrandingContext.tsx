@@ -126,9 +126,3 @@ export function useBranding() {
   if (!ctx) throw new Error('useBranding must be used within BrandingProvider');
   return ctx;
 }
-
-export function useBranding() {
-  const ctx = useContext(BrandingContext);
-  if (!ctx) throw new Error('useBranding must be used within BrandingProvider');
-  return ctx;
-}
