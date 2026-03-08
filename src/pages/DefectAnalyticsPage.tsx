@@ -27,7 +27,52 @@ const statusBg: Record<string, string> = {
 export default function DefectAnalyticsPage() {
   const { demoMode } = useDemoMode();
   const { activeRelease } = useRelease();
+  const { integrations } = useIntegrations();
   const [compareRelease, setCompareRelease] = useState<Release | null>(null);
+
+  // Find connected defect source for deep-linking
+  const defectSource = integrations.find(i => i.provides.includes('defect') && i.status === 'connected');
+
+  const buildDefectUrl = useCallback((defectId: string) => {
+    if (!defectSource?.url) return null;
+    const baseUrl = defectSource.url.replace(/\/+$/, '');
+    switch (defectSource.type) {
+      case 'jira':
+        return `${baseUrl}/browse/${defectId}`;
+      case 'azure-devops':
+        return `${baseUrl}/_workitems/edit/${defectId.replace(/\D/g, '')}`;
+      case 'github':
+        return `${baseUrl}/issues?q=${encodeURIComponent(defectId)}`;
+      case 'gitlab':
+        return `${baseUrl}/-/issues?search=${encodeURIComponent(defectId)}`;
+      default:
+        return null;
+    }
+  }, [defectSource]);
+
+  const buildQueryUrl = useCallback((filter: { severity?: string; status?: string }) => {
+    if (!defectSource?.url) return null;
+    const baseUrl = defectSource.url.replace(/\/+$/, '');
+    switch (defectSource.type) {
+      case 'jira': {
+        const jql = [
+          filter.severity ? `priority = "${filter.severity}"` : '',
+          filter.status ? `status = "${filter.status}"` : '',
+        ].filter(Boolean).join(' AND ');
+        return `${baseUrl}/issues/?jql=${encodeURIComponent(jql)}`;
+      }
+      case 'azure-devops': {
+        const wiql = [
+          '[System.WorkItemType] = "Bug"',
+          filter.severity ? `[Microsoft.VSTS.Common.Severity] = "${filter.severity}"` : '',
+          filter.status ? `[System.State] = "${filter.status}"` : '',
+        ].filter(Boolean).join(' AND ');
+        return `${baseUrl}/_queries?wiql=${encodeURIComponent(wiql)}`;
+      }
+      default:
+        return null;
+    }
+  }, [defectSource]);
 
   if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Defect Analytics</h1><p className="text-sm text-muted-foreground mt-0.5">Track and analyze defects across releases</p></div><NoDataPlaceholder title="Defect Analytics" /></div>);
 
