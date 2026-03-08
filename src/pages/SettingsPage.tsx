@@ -3,7 +3,7 @@ import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useBranding } from '@/contexts/BrandingContext';
 import { useIntegrations } from '@/contexts/IntegrationsContext';
 import {
-  Settings, Link2, Bot, Server, Users, Palette, Bell, Database, Shield,
+  Settings, Link2, Bot, Server, Users, Palette, Bell, Database, Shield, Activity,
   ChevronLeft, Plus, Trash2, Save, Eye, EyeOff, ToggleLeft, ToggleRight,
   Check, AlertTriangle, Loader2, Wifi, WifiOff, RefreshCw, ExternalLink
 } from 'lucide-react';
@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
+import ServiceHealthSettings from '@/components/settings/ServiceHealthSettings';
 
 /* ─── types ─── */
 interface Integration {
@@ -94,6 +95,7 @@ const sections = [
   { key: 'integrations', title: 'Integrations', desc: 'Configure Azure DevOps, Jira, and SonarQube connections', icon: Link2 },
   { key: 'ai-providers', title: 'AI Providers', desc: 'Manage LLM providers, API keys, and model settings', icon: Bot },
   { key: 'environments', title: 'Environments', desc: 'Configure Dev, QA, Stage, Prod, and Performance environments', icon: Server },
+  { key: 'service-health', title: 'Service Health', desc: 'Configure health check endpoints for real-time service monitoring', icon: Activity },
   { key: 'projects', title: 'Projects & Teams', desc: 'Manage project structure, team assignments, and mappings', icon: Users },
   { key: 'branding', title: 'Branding', desc: 'Customize logo, colors, and application theme', icon: Palette },
   { key: 'notifications', title: 'Notifications', desc: 'Configure alert thresholds and notification channels', icon: Bell },
@@ -1364,6 +1366,7 @@ export default function SettingsPage() {
     integrations: renderIntegrations,
     'ai-providers': renderAIProviders,
     environments: renderEnvironments,
+    'service-health': () => <ServiceHealthSettings />,
     projects: renderProjects,
     branding: renderBranding,
     notifications: renderNotifications,
