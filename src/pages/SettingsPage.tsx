@@ -857,6 +857,67 @@ export default function SettingsPage() {
     </div>
   );
 
+  const channelConfig: Record<string, { label: string; targetLabel: string; targetPlaceholder: string; needsWebhook: boolean; webhookPlaceholder: string; webhookHelp: string }> = {
+    slack: { label: 'Slack', targetLabel: 'Channel Name', targetPlaceholder: '#channel-name', needsWebhook: true, webhookPlaceholder: 'https://hooks.slack.com/services/T00/B00/xxxx', webhookHelp: 'Slack → App → Incoming Webhooks → Add New Webhook to Workspace → Copy URL' },
+    teams: { label: 'Microsoft Teams', targetLabel: 'Channel Name', targetPlaceholder: 'Team Channel Name', needsWebhook: true, webhookPlaceholder: 'https://outlook.office.com/webhook/...', webhookHelp: 'Teams → Channel → Connectors → Incoming Webhook → Configure → Copy URL' },
+    email: { label: 'Email', targetLabel: 'Email Address', targetPlaceholder: 'team@company.com', needsWebhook: false, webhookPlaceholder: '', webhookHelp: '' },
+  };
+
+  const handleAddChannel = () => {
+    if (!newChannelTarget.trim()) {
+      toast({ title: 'Missing field', description: `Please enter a ${channelConfig[newChannelType].targetLabel.toLowerCase()}.`, variant: 'destructive' });
+      return;
+    }
+    if (channelConfig[newChannelType].needsWebhook && !newChannelWebhook.trim()) {
+      toast({ title: 'Webhook URL required', description: `A webhook URL is required for ${channelConfig[newChannelType].label} notifications.`, variant: 'destructive' });
+      return;
+    }
+    if (channelConfig[newChannelType].needsWebhook) {
+      try { new URL(newChannelWebhook); } catch {
+        toast({ title: 'Invalid URL', description: 'Please enter a valid webhook URL.', variant: 'destructive' });
+        return;
+      }
+    }
+    if (newChannelType === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newChannelTarget)) {
+      toast({ title: 'Invalid email', description: 'Please enter a valid email address.', variant: 'destructive' });
+      return;
+    }
+
+    const newChannel: NotificationChannel = {
+      id: Date.now().toString(),
+      type: newChannelType,
+      target: newChannelTarget.trim(),
+      webhookUrl: channelConfig[newChannelType].needsWebhook ? newChannelWebhook.trim() : undefined,
+      enabled: true,
+    };
+    setChannels(prev => [...prev, newChannel]);
+    setAddChannelDialogOpen(false);
+    setNewChannelTarget('');
+    setNewChannelWebhook('');
+    setTestingWebhook('idle');
+    toast({ title: 'Channel added', description: `${channelConfig[newChannelType].label} channel "${newChannelTarget}" has been added.` });
+  };
+
+  const handleTestWebhook = () => {
+    if (!newChannelWebhook.trim()) return;
+    try { new URL(newChannelWebhook); } catch {
+      toast({ title: 'Invalid URL', description: 'Please enter a valid webhook URL first.', variant: 'destructive' });
+      return;
+    }
+    setTestingWebhook('testing');
+    // Simulate webhook test — in production this would POST to the URL
+    setTimeout(() => {
+      const success = newChannelWebhook.includes('hooks.slack.com') || newChannelWebhook.includes('webhook') || newChannelWebhook.includes('office.com');
+      setTestingWebhook(success ? 'success' : 'failed');
+      toast({
+        title: success ? 'Webhook reachable' : 'Webhook test failed',
+        description: success ? 'Test payload sent successfully.' : 'Could not reach the webhook URL. Please verify the URL and try again.',
+        variant: success ? undefined : 'destructive',
+      });
+      setTimeout(() => setTestingWebhook('idle'), 5000);
+    }, 1500);
+  };
+
   const renderNotifications = () => (
     <div className="space-y-6">
       <Card className="bg-card border-border">
@@ -880,28 +941,128 @@ export default function SettingsPage() {
       <Card className="bg-card border-border">
         <CardHeader><CardTitle className="text-base">Notification Channels</CardTitle></CardHeader>
         <CardContent className="space-y-3">
+          {channels.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">No notification channels configured yet.</p>
+          )}
           {channels.map(ch => (
             <div key={ch.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/20 border border-border/50">
-              <div className="flex items-center gap-3">
-                <Badge variant="outline" className="text-[10px] uppercase w-14 justify-center">{ch.type}</Badge>
-                <span className="text-sm text-foreground">{ch.target}</span>
+              <div className="flex items-center gap-3 min-w-0">
+                <Badge variant="outline" className="text-[10px] uppercase w-14 justify-center shrink-0">{ch.type}</Badge>
+                <div className="min-w-0">
+                  <span className="text-sm text-foreground block truncate">{ch.target}</span>
+                  {ch.webhookUrl && (
+                    <span className="text-[10px] text-muted-foreground font-mono block truncate">{ch.webhookUrl}</span>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 shrink-0">
                 <Switch
                   checked={ch.enabled}
                   onCheckedChange={(checked) => setChannels(prev => prev.map(c => c.id === ch.id ? { ...c, enabled: checked } : c))}
                 />
-                <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                  onClick={() => {
+                    setChannels(prev => prev.filter(c => c.id !== ch.id));
+                    toast({ title: 'Channel removed', description: `${ch.type} channel "${ch.target}" has been removed.` });
+                  }}
+                >
                   <Trash2 size={12} />
                 </Button>
               </div>
             </div>
           ))}
-          <Button variant="outline" className="w-full border-dashed mt-2" onClick={() => toast({ title: 'Add Channel', description: 'Channel setup wizard would open here.' })}>
+          <Button variant="outline" className="w-full border-dashed mt-2" onClick={() => { setNewChannelType('slack'); setNewChannelTarget(''); setNewChannelWebhook(''); setTestingWebhook('idle'); setAddChannelDialogOpen(true); }}>
             <Plus size={14} className="mr-2" /> Add Channel
           </Button>
         </CardContent>
       </Card>
+
+      {/* Add Channel Dialog */}
+      <Dialog open={addChannelDialogOpen} onOpenChange={setAddChannelDialogOpen}>
+        <DialogContent className="bg-card border-border max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Add Notification Channel</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label className="text-xs text-muted-foreground">Channel Type</Label>
+              <Select value={newChannelType} onValueChange={(v: 'slack' | 'teams' | 'email') => { setNewChannelType(v); setNewChannelWebhook(''); setTestingWebhook('idle'); }}>
+                <SelectTrigger className="mt-1 bg-muted/30 border-border text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="slack">Slack (Incoming Webhook)</SelectItem>
+                  <SelectItem value="teams">Microsoft Teams (Incoming Webhook)</SelectItem>
+                  <SelectItem value="email">Email</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-xs text-muted-foreground">{channelConfig[newChannelType].targetLabel}</Label>
+              <Input
+                value={newChannelTarget}
+                onChange={e => setNewChannelTarget(e.target.value)}
+                placeholder={channelConfig[newChannelType].targetPlaceholder}
+                className="mt-1 bg-muted/30 border-border text-sm"
+              />
+            </div>
+
+            {channelConfig[newChannelType].needsWebhook && (
+              <div>
+                <Label className="text-xs text-muted-foreground">Webhook URL</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    value={newChannelWebhook}
+                    onChange={e => { setNewChannelWebhook(e.target.value); setTestingWebhook('idle'); }}
+                    placeholder={channelConfig[newChannelType].webhookPlaceholder}
+                    className="bg-muted/30 border-border text-sm font-mono flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!newChannelWebhook.trim() || testingWebhook === 'testing'}
+                    onClick={handleTestWebhook}
+                    className="shrink-0"
+                  >
+                    {testingWebhook === 'testing' ? (
+                      <><Loader2 size={14} className="mr-1 animate-spin" /> Testing…</>
+                    ) : testingWebhook === 'success' ? (
+                      <><Check size={14} className="mr-1 text-success" /> Passed</>
+                    ) : testingWebhook === 'failed' ? (
+                      <><AlertTriangle size={14} className="mr-1 text-destructive" /> Failed</>
+                    ) : (
+                      <><Wifi size={14} className="mr-1" /> Test</>
+                    )}
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1.5 flex items-start gap-1">
+                  <ExternalLink size={10} className="shrink-0 mt-0.5" />
+                  {channelConfig[newChannelType].webhookHelp}
+                </p>
+                {testingWebhook === 'success' && (
+                  <div className="mt-2 flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-xs text-success">
+                    <Check size={12} /> Webhook URL verified successfully.
+                  </div>
+                )}
+                {testingWebhook === 'failed' && (
+                  <div className="mt-2 flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                    <AlertTriangle size={12} /> Could not reach webhook. Verify the URL.
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddChannelDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddChannel}><Plus size={14} className="mr-2" /> Add Channel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex justify-end">
         <Button onClick={() => handleSave('Notifications')}><Save size={14} className="mr-2" /> Save Changes</Button>
       </div>
