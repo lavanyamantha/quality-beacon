@@ -1201,15 +1201,21 @@ PRIVATE-TOKEN) based on the integration type.`}</pre>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 AI features (Release Advisor, Risk Prediction, QA Assistant) require an AI provider. Configure providers
                 via <strong>Settings → AI Providers</strong> in the dashboard (Admin only). Multiple providers can be configured simultaneously
-                with one set as the active provider.
+                with one set as the active provider. <strong>API keys are never entered in the UI</strong> — they must be configured in
+                <code className="text-xs bg-muted rounded px-1 py-0.5">server/.env</code> as server-side environment variables.
               </p>
+
+              <Callout type="warning">
+                The Settings UI only allows you to select a provider and model. API keys must be added to <code className="text-xs bg-muted rounded px-1 py-0.5">server/.env</code> by an administrator with server access. Keys are never stored or transmitted through the browser.
+              </Callout>
 
               <DocSection title="OpenAI" icon={Brain} defaultOpen>
                 <div className="space-y-3">
                   <StepList steps={[
-                    { title: 'Get an API key', desc: 'OpenAI Platform → API Keys → Create new secret key (https://platform.openai.com/api-keys).' },
-                    { title: 'Add in Settings', desc: 'Settings → AI Providers → Add Provider → Select OpenAI → Paste API key.' },
-                    { title: 'Select a model', desc: 'Recommended: gpt-4o for best quality, gpt-4o-mini for cost efficiency.' },
+                    { title: 'Generate an API key', desc: 'OpenAI Platform → API Keys → Create new secret key (https://platform.openai.com/api-keys).' },
+                    { title: 'Add key to server/.env', desc: 'Set the OpenAI API key in your server environment variables (e.g., OPENAI_API_KEY=sk-...).' },
+                    { title: 'Register in Settings UI', desc: 'Settings → AI Providers → Add Provider → Select OpenAI → Choose a model name.' },
+                    { title: 'Test connection', desc: 'Click "Test Connection" to verify the proxy can reach OpenAI with the server-side key.' },
                   ]} />
                   <Callout type="info">Supported models: gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo. Model selection affects quality, speed, and cost.</Callout>
                 </div>
@@ -1218,9 +1224,10 @@ PRIVATE-TOKEN) based on the integration type.`}</pre>
               <DocSection title="Anthropic (Claude)" icon={Brain}>
                 <div className="space-y-3">
                   <StepList steps={[
-                    { title: 'Get an API key', desc: 'Anthropic Console → API Keys → Create Key (https://console.anthropic.com/settings/keys).' },
-                    { title: 'Add in Settings', desc: 'Settings → AI Providers → Add Provider → Select Anthropic → Paste API key.' },
-                    { title: 'Select a model', desc: 'Recommended: claude-3.5-sonnet for balanced performance.' },
+                    { title: 'Generate an API key', desc: 'Anthropic Console → API Keys → Create Key (https://console.anthropic.com/settings/keys).' },
+                    { title: 'Add key to server/.env', desc: 'Set the Anthropic API key in your server environment variables (e.g., ANTHROPIC_API_KEY=sk-ant-...).' },
+                    { title: 'Register in Settings UI', desc: 'Settings → AI Providers → Add Provider → Select Anthropic → Choose a model name.' },
+                    { title: 'Test connection', desc: 'Click "Test Connection" to verify connectivity.' },
                   ]} />
                   <Callout type="info">Supported models: claude-3.5-sonnet, claude-3-opus, claude-3-haiku.</Callout>
                 </div>
@@ -1229,9 +1236,10 @@ PRIVATE-TOKEN) based on the integration type.`}</pre>
               <DocSection title="Google AI (Gemini)" icon={Brain}>
                 <div className="space-y-3">
                   <StepList steps={[
-                    { title: 'Get an API key', desc: 'Google AI Studio → Get API Key (https://aistudio.google.com/app/apikey).' },
-                    { title: 'Add in Settings', desc: 'Settings → AI Providers → Add Provider → Select Google → Paste API key.' },
-                    { title: 'Select a model', desc: 'Recommended: gemini-1.5-pro for advanced reasoning.' },
+                    { title: 'Generate an API key', desc: 'Google AI Studio → Get API Key (https://aistudio.google.com/app/apikey).' },
+                    { title: 'Add key to server/.env', desc: 'Set the Google AI API key in your server environment variables (e.g., GOOGLE_AI_API_KEY=...).' },
+                    { title: 'Register in Settings UI', desc: 'Settings → AI Providers → Add Provider → Select Google → Choose a model name.' },
+                    { title: 'Test connection', desc: 'Click "Test Connection" to verify connectivity.' },
                   ]} />
                   <Callout type="info">Supported models: gemini-1.5-pro, gemini-1.5-flash, gemini-1.0-pro.</Callout>
                 </div>
@@ -1241,8 +1249,9 @@ PRIVATE-TOKEN) based on the integration type.`}</pre>
                 <div className="space-y-3">
                   <StepList steps={[
                     { title: 'Deploy a LLaMA model', desc: 'Host LLaMA via Ollama, vLLM, or a cloud provider with an OpenAI-compatible API.' },
-                    { title: 'Add in Settings', desc: 'Settings → AI Providers → Add Provider → Select Meta → Enter your endpoint URL and API key.' },
-                    { title: 'Select a model', desc: 'Depends on your deployment: llama-3.1-70b, llama-3.1-8b, etc.' },
+                    { title: 'Add endpoint and key to server/.env', desc: 'Set the endpoint URL and API key in your server environment variables.' },
+                    { title: 'Register in Settings UI', desc: 'Settings → AI Providers → Add Provider → Select Meta → Choose a model name.' },
+                    { title: 'Test connection', desc: 'Click "Test Connection" to verify the proxy can reach your self-hosted endpoint.' },
                   ]} />
                   <Callout type="warning">Self-hosted models require your own infrastructure. Ensure the endpoint is accessible from the proxy server.</Callout>
                 </div>
