@@ -49,7 +49,7 @@ export default function AppSidebar() {
               <Cpu className="w-4.5 h-4.5 text-primary-foreground" size={18} />
             </div>
           )}
-          <h1 className="text-sm font-bold text-foreground leading-tight truncate max-w-[160px]" title={brandName}>{brandName}</h1>
+          <h1 className="text-sm font-bold text-foreground leading-snug break-words max-w-[160px]">{brandName}</h1>
         </div>
       </div>
 
