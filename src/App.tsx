@@ -7,6 +7,7 @@ import { DemoModeProvider } from "./contexts/DemoModeContext";
 import { ReleaseProvider } from "./contexts/ReleaseContext";
 import { BrandingProvider } from "./contexts/BrandingContext";
 import { IntegrationsProvider } from "./contexts/IntegrationsContext";
+import { ServiceHealthConfigProvider } from "./contexts/ServiceHealthConfigContext";
 import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Index";
 import ReleaseAdvisorPage from "./pages/ReleaseAdvisorPage";
