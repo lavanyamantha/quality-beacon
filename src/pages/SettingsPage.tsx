@@ -70,8 +70,8 @@ const initialIntegrations: Integration[] = [
 ];
 
 const initialProviders: AIProvider[] = [
-  { id: '1', provider: 'openai', model: 'gpt-4o', apiKey: 'sk-...redacted', temperature: 0.3, maxTokens: 4096, assignedTo: ['risk-prediction', 'qa-assistant'], enabled: true },
-  { id: '2', provider: 'anthropic', model: 'claude-3.5-sonnet', apiKey: 'sk-ant-...redacted', temperature: 0.2, maxTokens: 4096, assignedTo: ['defect-analysis'], enabled: false },
+  { id: '1', provider: 'openai', model: 'gpt-4o', apiKey: 'sk-...redacted', temperature: 0.3, maxTokens: 4096, assignedTo: ['risk-prediction', 'qa-assistant'], enabled: true, connectionStatus: 'untested' },
+  { id: '2', provider: 'anthropic', model: 'claude-3.5-sonnet', apiKey: 'sk-ant-...redacted', temperature: 0.2, maxTokens: 4096, assignedTo: ['defect-analysis'], enabled: false, connectionStatus: 'untested' },
 ];
 
 const initialEnvironments: Environment[] = [
