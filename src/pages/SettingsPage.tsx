@@ -40,6 +40,8 @@ interface AIProvider {
   maxTokens: number;
   assignedTo: string[];
   enabled: boolean;
+  connectionStatus?: 'untested' | 'testing' | 'success' | 'failed';
+  lastTested?: string;
 }
 
 interface Environment {
