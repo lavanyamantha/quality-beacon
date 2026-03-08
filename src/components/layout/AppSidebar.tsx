@@ -49,10 +49,7 @@ export default function AppSidebar() {
               <Cpu className="w-4.5 h-4.5 text-primary-foreground" size={18} />
             </div>
           )}
-          <div>
-            <h1 className="text-sm font-bold text-foreground leading-tight">{brandName.length > 16 ? brandName.slice(0, 16) : brandName}</h1>
-            {brandName.length > 16 && <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">{brandName.slice(16).trim()}</p>}
-          </div>
+          <h1 className="text-sm font-bold text-foreground leading-tight truncate max-w-[160px]" title={brandName}>{brandName}</h1>
         </div>
       </div>
 
