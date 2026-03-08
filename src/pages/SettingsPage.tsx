@@ -95,7 +95,6 @@ function loadChannels(): NotificationChannel[] {
   } catch { /* ignore */ }
   return initialChannels;
 }
-];
 
 /* ─── settings sections ─── */
 const sections = [
