@@ -96,7 +96,7 @@ export default function SettingsPage() {
   const [providers, setProviders] = useState(initialProviders);
   const [environments, setEnvironments] = useState(initialEnvironments);
   const [channels, setChannels] = useState(initialChannels);
-  const [demoMode, setDemoMode] = useState(true);
+  const { demoMode, setDemoMode } = useDemoMode();
   const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({});
 
   // branding state
