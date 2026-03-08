@@ -565,14 +565,15 @@ export default function SettingsPage() {
               <p className="text-[10px] text-muted-foreground mt-1">Select a known model or type a custom one</p>
             </div>
             <div>
-              <Label className="text-xs text-muted-foreground mb-1.5 block">API Key</Label>
-              <Input type="password" value={newAIApiKey} onChange={e => setNewAIApiKey(e.target.value)} placeholder="Enter API key…" className="bg-muted/30 border-border text-sm font-mono" />
+              <p className="text-[10px] text-muted-foreground italic">
+                API keys should be configured in <code className="text-primary">server/.env</code> — they are never stored in the browser.
+              </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddProviderDialogOpen(false)}>Cancel</Button>
             <Button
-              disabled={!newAIModel.trim() || !newAIApiKey.trim()}
+              disabled={!newAIModel.trim()}
               onClick={() => {
                 const newProvider: AIProvider = {
                   id: String(Date.now()),
