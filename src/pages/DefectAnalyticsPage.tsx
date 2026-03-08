@@ -122,13 +122,14 @@ export default function DefectAnalyticsPage() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-4 gap-4">
-        <MetricCard label="Total Defects" value={defects.length} compare={compareDefects?.length} invertDelta />
-        <MetricCard label="Critical" value={criticalCount} compare={compareCritical} invertDelta color="text-destructive" />
-        <MetricCard label="Open" value={openCount} compare={compareOpen} invertDelta color="text-warning" />
+        <MetricCard label="Total Defects" value={defects.length} compare={compareDefects?.length} invertDelta href={buildQueryUrl({})} />
+        <MetricCard label="Critical" value={criticalCount} compare={compareCritical} invertDelta color="text-destructive" href={buildQueryUrl({ severity: 'critical' })} />
+        <MetricCard label="Open" value={openCount} compare={compareOpen} invertDelta color="text-warning" href={buildQueryUrl({ status: 'open' })} />
         <MetricCard
           label="Resolution Rate"
           value={`${Math.round((defects.filter(d => d.status === 'resolved' || d.status === 'closed').length / defects.length) * 100)}%`}
           color="text-success"
+          href={buildQueryUrl({ status: 'resolved' })}
         />
       </div>
 
