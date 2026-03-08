@@ -68,7 +68,9 @@ export default function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProp
       </div>
 
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
-        {navItems.map(({ to, icon: Icon, label }) => (
+        {navItems
+          .filter(item => !('adminOnly' in item && item.adminOnly) || isAdmin)
+          .map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
