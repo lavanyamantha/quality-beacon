@@ -94,6 +94,7 @@ const sections = [
   { key: 'integrations', title: 'Integrations', desc: 'Configure Azure DevOps, Jira, and SonarQube connections', icon: Link2 },
   { key: 'ai-providers', title: 'AI Providers', desc: 'Manage LLM providers, API keys, and model settings', icon: Bot },
   { key: 'environments', title: 'Environments', desc: 'Configure Dev, QA, Stage, Prod, and Performance environments', icon: Server },
+  { key: 'service-health', title: 'Service Health', desc: 'Configure health check endpoints for real-time service monitoring', icon: Activity },
   { key: 'projects', title: 'Projects & Teams', desc: 'Manage project structure, team assignments, and mappings', icon: Users },
   { key: 'branding', title: 'Branding', desc: 'Customize logo, colors, and application theme', icon: Palette },
   { key: 'notifications', title: 'Notifications', desc: 'Configure alert thresholds and notification channels', icon: Bell },
