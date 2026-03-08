@@ -131,27 +131,33 @@ export default function Dashboard() {
               ))}
             </SelectContent>
           </Select>
+          <Button size="sm" variant="outline" className="h-9 text-xs" onClick={handleExportPDF} disabled={exporting}>
+            {exporting ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : <Download size={14} className="mr-1.5" />}
+            {exporting ? 'Exporting…' : 'Export PDF'}
+          </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <ReadinessGauge />
-        <AIAdvisorCard />
-      </div>
+      <div ref={dashboardRef} className="space-y-4">
+        <div className="grid grid-cols-3 gap-4">
+          <ReadinessGauge />
+          <AIAdvisorCard />
+        </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <TestSummaryCard />
-        <DefectSummaryCard />
-        <ReadinessTrendCard />
-      </div>
+        <div className="grid grid-cols-3 gap-4">
+          <TestSummaryCard />
+          <DefectSummaryCard />
+          <ReadinessTrendCard />
+        </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <ServiceHealthGrid />
-        <PipelineStatusCard />
-      </div>
+        <div className="grid grid-cols-3 gap-4">
+          <ServiceHealthGrid />
+          <PipelineStatusCard />
+        </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <FlakyTestCard />
+        <div className="grid grid-cols-3 gap-4">
+          <FlakyTestCard />
+        </div>
       </div>
     </div>
   );
