@@ -34,7 +34,6 @@ interface AIProvider {
   id: string;
   provider: string;
   model: string;
-  apiKey: string;
   temperature: number;
   maxTokens: number;
   assignedTo: string[];
