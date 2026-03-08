@@ -231,9 +231,9 @@ export default function Dashboard() {
             Real-time quality intelligence for {activeRelease.name}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Select value={selectedReleaseId} onValueChange={setSelectedReleaseId}>
-            <SelectTrigger className="w-[200px] h-9 text-xs">
+            <SelectTrigger className="w-[160px] sm:w-[200px] h-9 text-xs">
               <SelectValue placeholder="Select Release" />
             </SelectTrigger>
             <SelectContent>
@@ -250,7 +250,7 @@ export default function Dashboard() {
             </SelectContent>
           </Select>
           <Select value={selectedEnv} onValueChange={setSelectedEnv}>
-            <SelectTrigger className="w-[130px] h-9 text-xs">
+            <SelectTrigger className="w-[110px] sm:w-[130px] h-9 text-xs">
               <SelectValue placeholder="Environment" />
             </SelectTrigger>
             <SelectContent>
@@ -261,29 +261,30 @@ export default function Dashboard() {
           </Select>
           <Button size="sm" variant="outline" className="h-9 text-xs" onClick={handleExportPDF} disabled={exporting}>
             {exporting ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : <Download size={14} className="mr-1.5" />}
-            {exporting ? 'Exporting…' : 'Export PDF'}
+            <span className="hidden sm:inline">{exporting ? 'Exporting…' : 'Export PDF'}</span>
+            <span className="sm:hidden">{exporting ? '…' : 'PDF'}</span>
           </Button>
         </div>
       </div>
 
       <div ref={dashboardRef} className="space-y-4">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <ReadinessGauge />
           <AIAdvisorCard />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <TestSummaryCard />
           <DefectSummaryCard />
           <ReadinessTrendCard />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <ServiceHealthGrid />
           <PipelineStatusCard />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FlakyTestCard />
         </div>
       </div>

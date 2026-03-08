@@ -15,6 +15,7 @@ import {
   Zap,
   Clock,
   BookOpen,
+  X,
 } from 'lucide-react';
 
 const navItems = [
@@ -33,14 +34,19 @@ const navItems = [
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
-export default function AppSidebar() {
+interface AppSidebarProps {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export default function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps) {
   const location = useLocation();
   const { demoMode } = useDemoMode();
   const { brandName, brandLogo } = useBranding();
 
-  return (
-    <aside className="fixed left-0 top-0 bottom-0 w-60 bg-sidebar border-r border-sidebar-border flex flex-col z-50">
-      <div className="p-5 border-b border-sidebar-border">
+  const sidebarContent = (
+    <>
+      <div className="p-5 border-b border-sidebar-border flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           {brandLogo ? (
             <img src={brandLogo} alt="Logo" className="w-8 h-8 rounded-lg object-contain" />
@@ -51,6 +57,12 @@ export default function AppSidebar() {
           )}
           <h1 className="text-sm font-bold text-foreground leading-snug break-words max-w-[160px]">{brandName}</h1>
         </div>
+        {/* Close button visible only on mobile */}
+        {onMobileClose && (
+          <button onClick={onMobileClose} className="lg:hidden p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors">
+            <X size={18} />
+          </button>
+        )}
       </div>
 
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
@@ -58,6 +70,7 @@ export default function AppSidebar() {
           <NavLink
             key={to}
             to={to}
+            onClick={onMobileClose}
             className={
               location.pathname === to
                 ? 'sidebar-item-active'
@@ -76,6 +89,25 @@ export default function AppSidebar() {
           <span className="text-xs text-muted-foreground">{demoMode ? 'Demo Mode Active' : 'Live Mode'}</span>
         </div>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-60 bg-sidebar border-r border-sidebar-border flex-col z-50">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onMobileClose} />
+          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-sidebar border-r border-sidebar-border flex flex-col animate-in slide-in-from-left duration-200">
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }
