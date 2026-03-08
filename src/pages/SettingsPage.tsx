@@ -175,138 +175,40 @@ export default function SettingsPage() {
   };
 
   const handleTestConnection = async (int: Integration) => {
-    // Pre-flight: check token
-    if (!int.token.trim()) {
-      toast({
-        title: 'Credentials Required',
-        description: `Please provide a ${int.authLabel} before testing the connection.`,
-        variant: 'destructive',
-      });
-      return;
-    }
-
     setTestingConnection(prev => ({ ...prev, [int.id]: 'testing' }));
 
-    // URL domain validation first
-    let domainOk = false;
-    try {
-      const parsed = new URL(int.url);
-      const validDomains: Record<string, string[]> = {
-        'azure-devops': ['dev.azure.com', 'visualstudio.com'],
-        'jira': ['atlassian.net'],
-        'sonarqube': ['sonarqube', 'sonar'],
-        'github': ['github.com'],
-        'aws': ['amazonaws.com', 'aws.amazon.com'],
-        'gitlab': ['gitlab.com', 'gitlab'],
-        'jenkins': ['jenkins'],
-        'selenium-grid': ['selenium'],
-        'bitbucket': ['bitbucket.org'],
-      };
-      const allowed = validDomains[int.type] || [];
-      domainOk = allowed.some(d => parsed.hostname.includes(d));
-    } catch {
-      setTestingConnection(prev => ({ ...prev, [int.id]: 'failed' }));
-      toast({ title: 'Connection Failed', description: 'Invalid URL format.', variant: 'destructive' });
-      setTimeout(() => setTestingConnection(prev => ({ ...prev, [int.id]: 'idle' })), 5000);
-      return;
-    }
-
-    if (!domainOk) {
-      setTestingConnection(prev => ({ ...prev, [int.id]: 'failed' }));
-      toast({ title: 'Connection Failed', description: `URL domain does not match expected ${int.name} endpoints.`, variant: 'destructive' });
-      setTimeout(() => setTestingConnection(prev => ({ ...prev, [int.id]: 'idle' })), 5000);
-      return;
-    }
-
-    if (int.status !== 'connected') {
-      setTestingConnection(prev => ({ ...prev, [int.id]: 'failed' }));
-      toast({ title: 'Connection Failed', description: 'Integration is not connected. Connect first, then test.', variant: 'destructive' });
-      setTimeout(() => setTestingConnection(prev => ({ ...prev, [int.id]: 'idle' })), 5000);
-      return;
-    }
-
-    const token = int.token.trim();
-
-    // Real API checks for CORS-friendly providers
-    const liveCheckEndpoints: Record<string, { url: string; headers: (t: string) => Record<string, string> }> = {
-      'github': {
-        url: 'https://api.github.com/user',
-        headers: (t) => ({ Authorization: `Bearer ${t}`, Accept: 'application/vnd.github+json' }),
-      },
-      'gitlab': {
-        url: 'https://gitlab.com/api/v4/user',
-        headers: (t) => ({ 'PRIVATE-TOKEN': t }),
-      },
-      'bitbucket': {
-        url: 'https://api.bitbucket.org/2.0/user',
-        headers: (t) => ({ Authorization: `Bearer ${t}`, Accept: 'application/json' }),
-      },
-    };
-
-    const liveCheck = liveCheckEndpoints[int.type];
-
-    if (liveCheck) {
-      // Real API call
+    if (proxyEnabled) {
+      // Route through the server-side proxy — credentials are checked server-side
       try {
-        const resp = await fetch(liveCheck.url, { headers: liveCheck.headers(token) });
-        if (resp.ok) {
-          setTestingConnection(prev => ({ ...prev, [int.id]: 'success' }));
-          toast({ title: 'Connection Successful', description: `${int.name} authenticated and responded successfully.` });
-        } else if (resp.status === 401 || resp.status === 403) {
-          setTestingConnection(prev => ({ ...prev, [int.id]: 'failed' }));
-          toast({ title: 'Authentication Failed', description: `${int.name} rejected the credentials (HTTP ${resp.status}). Please check your token and permissions.`, variant: 'destructive' });
-        } else {
-          setTestingConnection(prev => ({ ...prev, [int.id]: 'failed' }));
-          toast({ title: 'Connection Failed', description: `${int.name} returned HTTP ${resp.status}. The service may be unavailable.`, variant: 'destructive' });
+        const result = await proxyTestConnection(int.type);
+        const status = result.ok ? 'success' : 'failed';
+        setTestingConnection(prev => ({ ...prev, [int.id]: status }));
+        toast({
+          title: result.ok ? 'Connection Successful' : 'Connection Failed',
+          description: result.ok
+            ? `${int.name} verified successfully${result.responseTimeMs ? ` (${result.responseTimeMs}ms)` : ''}.`
+            : result.error || `Could not verify ${int.name}.`,
+          variant: result.ok ? undefined : 'destructive',
+        });
+        if (result.ok) {
+          setIntegrations(prev => prev.map(i => i.id === int.id ? { ...i, status: 'connected', lastSync: new Date().toISOString().slice(0, 16).replace('T', ' ') } : i));
         }
-      } catch (err) {
+      } catch {
         setTestingConnection(prev => ({ ...prev, [int.id]: 'failed' }));
-        toast({ title: 'Connection Failed', description: `Could not reach ${int.name}. Network error or CORS restriction.`, variant: 'destructive' });
-      }
-      setTimeout(() => setTestingConnection(prev => ({ ...prev, [int.id]: 'idle' })), 5000);
-      return;
-    }
-
-    // Fallback: format-only validation for non-CORS providers (Azure DevOps, Jira, SonarQube, AWS, etc.)
-    const tokenRules: Record<string, { minLength: number; pattern?: RegExp; hint: string }> = {
-      'azure-devops': { minLength: 52, hint: 'Azure DevOps PATs are typically 52+ characters. (Format check only — real verification requires server-side proxy.)' },
-      'jira': { minLength: 24, hint: 'Atlassian API tokens are typically 24+ characters. (Format check only — real verification requires server-side proxy.)' },
-      'sonarqube': { minLength: 20, hint: 'SonarQube tokens are typically 20+ characters. (Format check only — real verification requires server-side proxy.)' },
-      'aws': { minLength: 16, pattern: /^AK/, hint: 'AWS Access Key IDs start with "AK". (Format check only.)' },
-    };
-
-    await new Promise(r => setTimeout(r, 1500)); // simulate delay
-
-    const rule = tokenRules[int.type];
-    let failReason = '';
-    let success = false;
-
-    if (rule) {
-      if (token.length < rule.minLength) {
-        failReason = `Invalid credentials: token is too short. ${rule.hint}`;
-      } else if (rule.pattern && !rule.pattern.test(token)) {
-        failReason = `Invalid credentials format. ${rule.hint}`;
-      } else {
-        success = true;
+        toast({ title: 'Connection Failed', description: `Could not reach proxy server. Is it running?`, variant: 'destructive' });
       }
     } else {
-      success = token.length >= 10;
-      if (!success) failReason = 'Token appears too short to be valid.';
+      // No proxy — simulate a delay and show guidance
+      await new Promise(r => setTimeout(r, 1500));
+      setTestingConnection(prev => ({ ...prev, [int.id]: 'failed' }));
+      toast({
+        title: 'Proxy Not Configured',
+        description: 'Set VITE_PROXY_URL and run the proxy server to enable live connection testing. Credentials are managed server-side.',
+        variant: 'destructive',
+      });
     }
 
-    setTestingConnection(prev => ({ ...prev, [int.id]: success ? 'success' : 'failed' }));
-    toast({
-      title: success ? 'Format Validated' : 'Connection Failed',
-      description: success
-        ? `${int.name} credentials appear valid (format check). Full verification requires a server-side proxy.`
-        : failReason,
-      variant: success ? undefined : 'destructive',
-    });
     setTimeout(() => setTestingConnection(prev => ({ ...prev, [int.id]: 'idle' })), 5000);
-  };
-
-  const toggleApiKeyVisibility = (id: string) => {
-    setShowApiKeys(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
   const statusColor = (s: string) =>
