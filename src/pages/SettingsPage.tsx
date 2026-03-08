@@ -885,10 +885,15 @@ export default function SettingsPage() {
               ].map(c => (
                 <button
                   key={c.name}
-                  className="w-8 h-8 rounded-full border-2 border-border hover:scale-110 transition-transform"
+                  className={`w-8 h-8 rounded-full border-2 hover:scale-110 transition-transform ${
+                    primaryColor === c.hsl ? 'border-foreground ring-2 ring-foreground/30' : 'border-border'
+                  }`}
                   style={{ background: `hsl(${c.hsl})` }}
                   title={c.name}
-                  onClick={() => toast({ title: 'Color Updated', description: `Primary color set to ${c.name}.` })}
+                  onClick={() => {
+                    setPrimaryColor(c.hsl);
+                    toast({ title: 'Color Updated', description: `Primary color set to ${c.name}.` });
+                  }}
                 />
               ))}
             </div>
