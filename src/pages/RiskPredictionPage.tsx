@@ -40,12 +40,13 @@ function RiskLegend() {
         <Info size={14} className="text-muted-foreground" />
         <span className="text-xs font-semibold text-foreground">Risk Level Legend</span>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="space-y-1.5">
         {levels.map(l => (
           <div key={l.label} className="flex items-center gap-2 text-xs">
-            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: l.color }} />
-            <span className="text-muted-foreground">{l.label}</span>
-            <span className="text-foreground font-medium ml-auto">{l.desc}</span>
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: l.color }} />
+            <span className="text-muted-foreground whitespace-nowrap">{l.label}</span>
+            <span className="border-b border-dotted border-border flex-1 min-w-2" />
+            <span className="text-foreground font-medium whitespace-nowrap">{l.desc}</span>
           </div>
         ))}
       </div>
