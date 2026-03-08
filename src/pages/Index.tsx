@@ -269,7 +269,7 @@ export default function Dashboard() {
       </div>
 
       {/* AI Connection Warning Banner */}
-      {!dismissedAIWarning && (
+      {aiMode !== 'disabled' && !dismissedAIWarning && (
         <div className="relative flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm animate-pulse-slow">
           <AlertTriangle size={18} className="text-warning shrink-0 mt-0.5" />
           <div className="flex-1">
