@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useBranding } from '@/contexts/BrandingContext';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   LayoutDashboard,
   Activity,
@@ -31,7 +32,7 @@ const navItems = [
   { to: '/risk', icon: BarChart3, label: 'Risk Prediction' },
   { to: '/ai-assistant', icon: Cpu, label: 'QA Assistant' },
   { to: '/docs', icon: BookOpen, label: 'Documentation' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
+  { to: '/settings', icon: Settings, label: 'Settings', adminOnly: true },
 ];
 
 interface AppSidebarProps {
@@ -41,6 +42,7 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps) {
   const location = useLocation();
+  const { isAdmin } = useAuth();
   const { demoMode } = useDemoMode();
   const { brandName, brandLogo } = useBranding();
 
@@ -66,7 +68,9 @@ export default function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProp
       </div>
 
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
-        {navItems.map(({ to, icon: Icon, label }) => (
+        {navItems
+          .filter(item => !('adminOnly' in item && item.adminOnly) || isAdmin)
+          .map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
