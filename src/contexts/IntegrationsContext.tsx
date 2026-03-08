@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { loadIntegrationsFromEnv } from '@/config/integrations';
+import { isProxyEnabled, fetchIntegrationsFromProxy } from '@/services/proxyClient';
 
 export interface IntegrationSource {
   id: string;
@@ -9,9 +10,9 @@ export interface IntegrationSource {
   lastSync?: string;
   /** Which timeline event types this source provides */
   provides: Array<'release' | 'deployment' | 'pipeline' | 'defect' | 'test'>;
-  /** Base URL for the integration */
+  /** Base URL for the integration (safe — no token) */
   url?: string;
-  /** Authentication token / API key */
+  /** Authentication token / API key — only present in non-proxy mode */
   token?: string;
 }
 
@@ -24,12 +25,37 @@ interface IntegrationsContextType {
   connectedSources: IntegrationSource[];
   disconnectedSources: IntegrationSource[];
   getPipelineSources: () => IntegrationSource[];
+  /** Whether API calls are routed through the secure proxy */
+  proxyEnabled: boolean;
 }
 
 const IntegrationsContext = createContext<IntegrationsContextType | undefined>(undefined);
 
 export function IntegrationsProvider({ children }: { children: ReactNode }) {
   const [integrations, setIntegrations] = useState<IntegrationSource[]>(() => loadIntegrationsFromEnv());
+  const proxyEnabled = isProxyEnabled();
+
+  // If proxy is enabled, fetch the real integration list from the server
+  useEffect(() => {
+    if (!proxyEnabled) return;
+
+    fetchIntegrationsFromProxy()
+      .then((serverIntegrations) => {
+        setIntegrations(
+          serverIntegrations.map((i: any) => ({
+            id: i.id,
+            name: i.name,
+            type: i.type,
+            status: i.status,
+            provides: i.provides,
+            url: i.url, // base URL only, no token
+          }))
+        );
+      })
+      .catch((err) => {
+        console.warn('Failed to fetch integrations from proxy, using env fallback:', err);
+      });
+  }, [proxyEnabled]);
 
   const updateStatus = (id: string, status: IntegrationSource['status'], lastSync?: string) => {
     setIntegrations(prev =>
@@ -47,13 +73,22 @@ export function IntegrationsProvider({ children }: { children: ReactNode }) {
     integrations.filter(i => i.provides.includes(type as any));
 
   const getPipelineSources = () =>
-    integrations.filter(i => i.provides.includes('pipeline') && i.status === 'connected' && i.token);
+    integrations.filter(i =>
+      i.provides.includes('pipeline') &&
+      i.status === 'connected' &&
+      // In proxy mode, tokens are server-side so we just check connected status
+      (proxyEnabled || i.token)
+    );
 
   const connectedSources = integrations.filter(i => i.status === 'connected');
   const disconnectedSources = integrations.filter(i => i.status !== 'connected');
 
   return (
-    <IntegrationsContext.Provider value={{ integrations, setIntegrations, updateStatus, updateCredentials, getSourcesForType, connectedSources, disconnectedSources, getPipelineSources }}>
+    <IntegrationsContext.Provider value={{
+      integrations, setIntegrations, updateStatus, updateCredentials,
+      getSourcesForType, connectedSources, disconnectedSources,
+      getPipelineSources, proxyEnabled,
+    }}>
       {children}
     </IntegrationsContext.Provider>
   );
