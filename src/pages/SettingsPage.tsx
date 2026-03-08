@@ -283,7 +283,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       ))}
-      <Button variant="outline" className="w-full border-dashed" onClick={() => { setNewProviderType(''); setNewUrl(''); setNewToken(''); setAddDialogOpen(true); }}>
+      <Button variant="outline" className="w-full border-dashed" onClick={() => { setNewProviderType(''); setNewUrl(''); setAddDialogOpen(true); }}>
         <Plus size={14} className="mr-2" /> Add Integration
       </Button>
 
