@@ -21,6 +21,10 @@ interface Integration {
   name: string;
   type: string;
   url: string;
+  authType: 'pat' | 'api-key' | 'oauth';
+  authLabel: string;
+  authPlaceholder: string;
+  token: string;
   status: 'connected' | 'disconnected' | 'error';
   lastSync?: string;
 }
