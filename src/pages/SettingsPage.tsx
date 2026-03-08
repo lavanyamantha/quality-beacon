@@ -98,6 +98,7 @@ export default function SettingsPage() {
   const [channels, setChannels] = useState(initialChannels);
   const { demoMode, setDemoMode } = useDemoMode();
   const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({});
+  const [testingConnection, setTestingConnection] = useState<Record<string, 'idle' | 'testing' | 'success' | 'failed'>>({});
 
   // branding state
   const [brandName, setBrandName] = useState('AI QA Command Center');
