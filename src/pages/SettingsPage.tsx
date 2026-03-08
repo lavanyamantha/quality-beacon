@@ -80,10 +80,20 @@ const initialEnvironments: Environment[] = [
   { id: '5', name: 'Performance', healthUrl: 'https://perf-api.internal.com/health', pipelineMapping: 'perf-*', enabled: false },
 ];
 
+const CHANNELS_STORAGE_KEY = 'qa-dashboard-notification-channels';
+
 const initialChannels: NotificationChannel[] = [
   { id: '1', type: 'slack', target: '#qa-alerts', webhookUrl: 'https://hooks.slack.com/services/T00/B00/xxxx', enabled: true },
   { id: '2', type: 'email', target: 'qa-team@company.com', enabled: true },
   { id: '3', type: 'teams', target: 'QA Release Channel', webhookUrl: 'https://outlook.office.com/webhook/xxxx', enabled: false },
+
+function loadChannels(): NotificationChannel[] {
+  try {
+    const stored = localStorage.getItem(CHANNELS_STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch { /* ignore */ }
+  return initialChannels;
+}
 ];
 
 /* ─── settings sections ─── */
