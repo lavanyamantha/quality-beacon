@@ -53,6 +53,34 @@ const statusColor: Record<string, string> = {
 export default function Dashboard() {
   const { demoMode } = useDemoMode();
   const { selectedReleaseId, selectedEnv, setSelectedReleaseId, setSelectedEnv, activeRelease } = useRelease();
+  const dashboardRef = useRef<HTMLDivElement>(null);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportPDF = async () => {
+    if (!dashboardRef.current) return;
+    setExporting(true);
+    try {
+      const canvas = await html2canvas(dashboardRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#0a0a0f',
+        logging: false,
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [canvas.width, canvas.height],
+      });
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`dashboard-${activeRelease.version}-${selectedEnv}-${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast({ title: 'PDF exported', description: `Dashboard snapshot for ${activeRelease.version} (${selectedEnv}) saved.` });
+    } catch {
+      toast({ title: 'Export failed', description: 'Could not generate PDF. Please try again.', variant: 'destructive' });
+    } finally {
+      setExporting(false);
+    }
+  };
 
   if (!demoMode) {
     return (
