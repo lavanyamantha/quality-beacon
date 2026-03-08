@@ -104,7 +104,7 @@ export default function SettingsPage() {
   const [brandTheme, setBrandTheme] = useState('dark');
 
   // governance state
-  const [decisionMode, setDecisionMode] = useState('support');
+  const { aiMode: decisionMode, setAiMode: setDecisionMode } = useDemoMode();
   const [auditEnabled, setAuditEnabled] = useState(true);
   const [dataRedaction, setDataRedaction] = useState(true);
 
