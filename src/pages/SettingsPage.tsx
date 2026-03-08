@@ -479,17 +479,9 @@ export default function SettingsPage() {
                 <p className="text-[10px] text-muted-foreground mt-1">Type a custom model name or pick from suggestions</p>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">API Key</Label>
-                <div className="flex gap-2 mt-1">
-                  <Input
-                    type={showApiKeys[p.id] ? 'text' : 'password'}
-                    defaultValue={p.apiKey}
-                    className="bg-muted/30 border-border text-sm font-mono"
-                  />
-                  <Button size="icon" variant="ghost" onClick={() => toggleApiKeyVisibility(p.id)}>
-                    {showApiKeys[p.id] ? <EyeOff size={14} /> : <Eye size={14} />}
-                  </Button>
-                </div>
+                <p className="text-[10px] text-muted-foreground italic mt-1">
+                  API keys are managed securely on the server. Configure them in <code className="text-primary">server/.env</code>
+                </p>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Temperature: {p.temperature}</Label>
