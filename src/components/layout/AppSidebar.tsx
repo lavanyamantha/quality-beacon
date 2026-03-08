@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 import {
   LayoutDashboard,
   Activity,
