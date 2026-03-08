@@ -839,6 +839,459 @@ export default function DocumentationPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ═══ Infrastructure & Setup ═══ */}
+        <TabsContent value="infrastructure" className="space-y-6">
+          {/* Proxy Server Overview */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Server size={20} className="text-primary" />
+                Proxy Server Architecture
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                The QA Dashboard uses a lightweight Express.js proxy server to keep all integration credentials server-side.
+                API calls from the browser are routed through the proxy, which attaches the correct authentication headers before
+                forwarding requests to Azure DevOps, Jira, GitHub, and other providers. Tokens never reach the browser.
+              </p>
+
+              <div className="rounded-xl border border-border bg-muted/30 p-5 font-mono text-sm text-foreground">
+                <p className="text-muted-foreground mb-2 font-sans text-xs font-semibold uppercase tracking-wider">Request Flow</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">Browser (React)</Badge>
+                  <ChevronRight size={14} className="text-muted-foreground" />
+                  <Badge variant="outline" className="bg-accent/20 text-accent-foreground border-accent/30">Proxy Server (Express)</Badge>
+                  <ChevronRight size={14} className="text-muted-foreground" />
+                  <Badge variant="outline" className="bg-success/15 text-success border-success/30">Provider API</Badge>
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  No tokens in browser → Proxy holds all tokens → Provider receives authenticated requests
+                </p>
+              </div>
+
+              <Callout type="warning">
+                <strong>Security:</strong> Never commit your <code className="text-xs bg-muted rounded px-1 py-0.5">server/.env</code> file.
+                All credentials must be stored as server-side environment variables, never exposed to the frontend.
+              </Callout>
+            </CardContent>
+          </Card>
+
+          {/* Quick Start */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Terminal size={20} className="text-primary" />
+                Proxy Server — Quick Start
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <StepList steps={[
+                { title: 'Navigate to the server directory', desc: 'cd server' },
+                { title: 'Copy the environment template', desc: 'cp .env.example .env — then fill in your credentials (see sections below).' },
+                { title: 'Install dependencies', desc: 'npm install' },
+                { title: 'Start the proxy', desc: 'npm start — runs on http://localhost:3001 by default.' },
+                { title: 'Configure the frontend', desc: 'In your frontend .env.local, set VITE_PROXY_URL=http://localhost:3001 to route API calls through the proxy.' },
+              ]} />
+
+              <Separator />
+
+              <div>
+                <p className="text-sm font-semibold text-foreground mb-2">Core Server Environment Variables</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-2 px-3 font-semibold text-foreground">Variable</th>
+                        <th className="text-left py-2 px-3 font-semibold text-foreground">Default</th>
+                        <th className="text-left py-2 px-3 font-semibold text-foreground">Description</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-muted-foreground">
+                      <tr className="border-b border-border/50"><td className="py-2 px-3 font-mono text-xs">PROXY_PORT</td><td className="py-2 px-3">3001</td><td className="py-2 px-3">Port the proxy server listens on</td></tr>
+                      <tr className="border-b border-border/50"><td className="py-2 px-3 font-mono text-xs">PROXY_BASE_URL</td><td className="py-2 px-3">http://localhost:3001</td><td className="py-2 px-3">Public URL of proxy (used for OAuth callbacks)</td></tr>
+                      <tr className="border-b border-border/50"><td className="py-2 px-3 font-mono text-xs">FRONTEND_URL</td><td className="py-2 px-3">http://localhost:5173</td><td className="py-2 px-3">Frontend URL for OAuth redirects and CORS</td></tr>
+                      <tr className="border-b border-border/50"><td className="py-2 px-3 font-mono text-xs">JWT_SECRET</td><td className="py-2 px-3">—</td><td className="py-2 px-3">Secret key for signing JWT tokens (change in production!)</td></tr>
+                      <tr className="border-b border-border/50"><td className="py-2 px-3 font-mono text-xs">JWT_EXPIRY</td><td className="py-2 px-3">8h</td><td className="py-2 px-3">JWT token expiry duration</td></tr>
+                      <tr className="border-b border-border/50"><td className="py-2 px-3 font-mono text-xs">ADMIN_EMAILS</td><td className="py-2 px-3">—</td><td className="py-2 px-3">Comma-separated list of admin email addresses</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <Callout type="tip">
+                <strong>Docker Deployment:</strong> Run <code className="text-xs bg-muted rounded px-1 py-0.5">docker build -t qa-dashboard-proxy .</code> in the server/ directory, then
+                <code className="text-xs bg-muted rounded px-1 py-0.5"> docker run -p 3001:3001 --env-file .env qa-dashboard-proxy</code>.
+                For Azure App Service, AWS ECS, or similar — deploy the server/ folder and configure secrets via platform secret management.
+              </Callout>
+            </CardContent>
+          </Card>
+
+          {/* API Endpoints */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Network size={20} className="text-primary" />
+                Proxy API Endpoints
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-2 px-3 font-semibold text-foreground">Method</th>
+                      <th className="text-left py-2 px-3 font-semibold text-foreground">Path</th>
+                      <th className="text-left py-2 px-3 font-semibold text-foreground">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-muted-foreground">
+                    <tr className="border-b border-border/50"><td className="py-2 px-3"><Badge variant="outline" className="text-xs">GET</Badge></td><td className="py-2 px-3 font-mono text-xs">/api/integrations</td><td className="py-2 px-3">List configured integrations (no tokens exposed)</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3"><Badge variant="outline" className="text-xs bg-primary/10">POST</Badge></td><td className="py-2 px-3 font-mono text-xs">/api/proxy/:type</td><td className="py-2 px-3">Forward an API request through the proxy</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3"><Badge variant="outline" className="text-xs">GET</Badge></td><td className="py-2 px-3 font-mono text-xs">/api/proxy/:type/test</td><td className="py-2 px-3">Test integration connectivity</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3"><Badge variant="outline" className="text-xs">GET</Badge></td><td className="py-2 px-3 font-mono text-xs">/api/proxy/:type/health</td><td className="py-2 px-3">Health check an integration endpoint</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3"><Badge variant="outline" className="text-xs">GET</Badge></td><td className="py-2 px-3 font-mono text-xs">/api/auth/providers</td><td className="py-2 px-3">List available SSO providers (no secrets)</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3"><Badge variant="outline" className="text-xs">GET</Badge></td><td className="py-2 px-3 font-mono text-xs">/api/auth/me</td><td className="py-2 px-3">Verify JWT and return current user</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-5 rounded-lg border border-border bg-muted/30 p-4">
+                <p className="text-xs font-semibold text-foreground mb-2">Example: Proxy Request Body</p>
+                <pre className="text-xs text-muted-foreground font-mono whitespace-pre-wrap">{`POST /api/proxy/azure-devops
+{
+  "method": "GET",
+  "path": "/_apis/projects?api-version=7.1",
+  "headers": {}
+}
+
+The proxy attaches auth headers (Basic, Bearer, or
+PRIVATE-TOKEN) based on the integration type.`}</pre>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Authentication Providers (SSO) */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <ShieldCheck size={20} className="text-primary" />
+                Authentication Providers (SSO)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                The proxy server supports four SSO providers via Passport.js. Enable a provider by setting the required
+                environment variables. Role assignment is email-based: emails in <code className="text-xs bg-muted rounded px-1 py-0.5">ADMIN_EMAILS</code> get the Admin role, all others get Viewer.
+              </p>
+
+              <DocSection title="Microsoft Entra ID (Azure AD)" icon={ShieldCheck} defaultOpen>
+                <div className="space-y-3">
+                  <StepList steps={[
+                    { title: 'Register the application', desc: 'Azure Portal → App registrations → New registration. Set redirect URI to {PROXY_BASE_URL}/api/auth/azure-ad/callback.' },
+                    { title: 'Create a client secret', desc: 'Go to Certificates & secrets → New client secret. Copy the value immediately.' },
+                    { title: 'Set environment variables', desc: 'AZURE_AD_TENANT_ID, AZURE_AD_CLIENT_ID, AZURE_AD_CLIENT_SECRET in server/.env.' },
+                  ]} />
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead><tr className="border-b border-border"><th className="text-left py-2 px-3 font-semibold text-foreground">Variable</th><th className="text-left py-2 px-3 font-semibold text-foreground">Where to Find</th></tr></thead>
+                      <tbody className="text-muted-foreground">
+                        <tr className="border-b border-border/50"><td className="py-2 px-3 font-mono text-xs">AZURE_AD_TENANT_ID</td><td className="py-2 px-3">Azure Portal → Azure Active Directory → Overview → Tenant ID</td></tr>
+                        <tr className="border-b border-border/50"><td className="py-2 px-3 font-mono text-xs">AZURE_AD_CLIENT_ID</td><td className="py-2 px-3">App registrations → Your app → Application (client) ID</td></tr>
+                        <tr className="border-b border-border/50"><td className="py-2 px-3 font-mono text-xs">AZURE_AD_CLIENT_SECRET</td><td className="py-2 px-3">Certificates & secrets → Client secrets → Value</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </DocSection>
+
+              <DocSection title="GitHub OAuth" icon={GitBranch}>
+                <div className="space-y-3">
+                  <StepList steps={[
+                    { title: 'Create an OAuth App', desc: 'GitHub → Settings → Developer Settings → OAuth Apps → New OAuth App.' },
+                    { title: 'Set callback URL', desc: 'Authorization callback URL: {PROXY_BASE_URL}/api/auth/github/callback.' },
+                    { title: 'Copy credentials', desc: 'Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET in server/.env.' },
+                  ]} />
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead><tr className="border-b border-border"><th className="text-left py-2 px-3 font-semibold text-foreground">Variable</th><th className="text-left py-2 px-3 font-semibold text-foreground">Where to Find</th></tr></thead>
+                      <tbody className="text-muted-foreground">
+                        <tr className="border-b border-border/50"><td className="py-2 px-3 font-mono text-xs">GITHUB_CLIENT_ID</td><td className="py-2 px-3">OAuth App → Client ID</td></tr>
+                        <tr className="border-b border-border/50"><td className="py-2 px-3 font-mono text-xs">GITHUB_CLIENT_SECRET</td><td className="py-2 px-3">OAuth App → Client secrets → Generate a new client secret</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </DocSection>
+
+              <DocSection title="Google Workspace OAuth" icon={Globe}>
+                <div className="space-y-3">
+                  <StepList steps={[
+                    { title: 'Create OAuth credentials', desc: 'Google Cloud Console → APIs & Services → Credentials → Create credentials → OAuth 2.0 Client ID.' },
+                    { title: 'Set authorized redirect URI', desc: '{PROXY_BASE_URL}/api/auth/google/callback.' },
+                    { title: 'Copy credentials', desc: 'Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in server/.env.' },
+                  ]} />
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead><tr className="border-b border-border"><th className="text-left py-2 px-3 font-semibold text-foreground">Variable</th><th className="text-left py-2 px-3 font-semibold text-foreground">Where to Find</th></tr></thead>
+                      <tbody className="text-muted-foreground">
+                        <tr className="border-b border-border/50"><td className="py-2 px-3 font-mono text-xs">GOOGLE_CLIENT_ID</td><td className="py-2 px-3">OAuth 2.0 Client IDs → Client ID</td></tr>
+                        <tr className="border-b border-border/50"><td className="py-2 px-3 font-mono text-xs">GOOGLE_CLIENT_SECRET</td><td className="py-2 px-3">OAuth 2.0 Client IDs → Client secret</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </DocSection>
+
+              <DocSection title="AWS IAM Identity Center (SAML)" icon={HardDrive}>
+                <div className="space-y-3">
+                  <StepList steps={[
+                    { title: 'Add a custom SAML application', desc: 'AWS SSO Console → Applications → Add a custom SAML 2.0 application.' },
+                    { title: 'Set ACS URL', desc: 'Application ACS URL: {PROXY_BASE_URL}/api/auth/aws-sso/callback.' },
+                    { title: 'Download IdP certificate', desc: 'Copy the single-line base64 certificate for AWS_SSO_CERT.' },
+                    { title: 'Set environment variables', desc: 'AWS_SSO_ENTRY_POINT, AWS_SSO_ISSUER, AWS_SSO_CERT in server/.env.' },
+                  ]} />
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead><tr className="border-b border-border"><th className="text-left py-2 px-3 font-semibold text-foreground">Variable</th><th className="text-left py-2 px-3 font-semibold text-foreground">Where to Find</th></tr></thead>
+                      <tbody className="text-muted-foreground">
+                        <tr className="border-b border-border/50"><td className="py-2 px-3 font-mono text-xs">AWS_SSO_ENTRY_POINT</td><td className="py-2 px-3">SAML application → SSO URL / entry point</td></tr>
+                        <tr className="border-b border-border/50"><td className="py-2 px-3 font-mono text-xs">AWS_SSO_ISSUER</td><td className="py-2 px-3">Application issuer (default: qa-dashboard)</td></tr>
+                        <tr className="border-b border-border/50"><td className="py-2 px-3 font-mono text-xs">AWS_SSO_CERT</td><td className="py-2 px-3">IdP signing certificate (single-line base64)</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </DocSection>
+            </CardContent>
+          </Card>
+
+          {/* Integration Credentials */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Plug size={20} className="text-primary" />
+                Integration Credentials
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Each integration requires a <strong>Base URL</strong> and an <strong>API Token</strong> set in
+                <code className="text-xs bg-muted rounded px-1 py-0.5"> server/.env</code>. The proxy uses provider-specific authentication
+                schemes (Basic, Bearer, PRIVATE-TOKEN) automatically. Below is a complete reference for all nine supported integrations.
+              </p>
+
+              <DocSection title="Azure DevOps" icon={Cog} defaultOpen>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">Provides: releases, deployments, pipelines, test results.</p>
+                  <StepList steps={[
+                    { title: 'Generate a PAT', desc: 'Azure DevOps → User settings → Personal access tokens → New Token. Select scopes: Build (Read), Release (Read), Test Management (Read), Project and Team (Read).' },
+                    { title: 'Set AZURE_DEVOPS_URL', desc: 'Format: https://dev.azure.com/{organization}/{project}' },
+                    { title: 'Set AZURE_DEVOPS_TOKEN', desc: 'Paste the Personal Access Token. Auth scheme: Basic (base64 of :token).' },
+                  ]} />
+                  <Callout type="info">The proxy uses <code className="text-xs bg-muted rounded px-1 py-0.5">Basic</code> authentication with the PAT encoded as <code className="text-xs bg-muted rounded px-1 py-0.5">base64(:token)</code>.</Callout>
+                </div>
+              </DocSection>
+
+              <DocSection title="Jira Cloud" icon={Bug}>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">Provides: defect tracking.</p>
+                  <StepList steps={[
+                    { title: 'Create an API token', desc: 'Atlassian Account → Security → API tokens → Create API token.' },
+                    { title: 'Encode credentials', desc: 'Base64 encode your-email@company.com:api-token (e.g., using btoa() or command line).' },
+                    { title: 'Set JIRA_URL', desc: 'Format: https://your-domain.atlassian.net' },
+                    { title: 'Set JIRA_TOKEN', desc: 'Paste the base64-encoded email:api-token string.' },
+                  ]} />
+                  <Callout type="info">Auth scheme: <code className="text-xs bg-muted rounded px-1 py-0.5">Basic {'{base64(email:api-token)}'}</code>.</Callout>
+                </div>
+              </DocSection>
+
+              <DocSection title="SonarQube" icon={Shield}>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">Provides: code coverage and static analysis metrics.</p>
+                  <StepList steps={[
+                    { title: 'Generate a token', desc: 'SonarQube → My Account → Security → Generate Tokens.' },
+                    { title: 'Set SONARQUBE_URL', desc: 'Format: https://sonarqube.your-company.com' },
+                    { title: 'Set SONARQUBE_TOKEN', desc: 'Paste the user token. Auth scheme: Basic (base64 of token:).' },
+                  ]} />
+                </div>
+              </DocSection>
+
+              <DocSection title="GitHub" icon={GitBranch}>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">Provides: releases, deployments, pipeline (Actions) data.</p>
+                  <StepList steps={[
+                    { title: 'Create a Personal Access Token', desc: 'GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token. Scopes: repo, workflow, read:org.' },
+                    { title: 'Set GITHUB_URL', desc: 'Format: https://api.github.com (or your GitHub Enterprise base URL).' },
+                    { title: 'Set GITHUB_TOKEN', desc: 'Paste the token (starts with ghp_). Auth scheme: Bearer.' },
+                  ]} />
+                  <Callout type="tip">This is the <strong>integration</strong> token for fetching data — separate from the GitHub OAuth credentials used for SSO login.</Callout>
+                </div>
+              </DocSection>
+
+              <DocSection title="GitLab" icon={GitBranch}>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">Provides: releases, deployments, pipeline data.</p>
+                  <StepList steps={[
+                    { title: 'Create a Personal Access Token', desc: 'GitLab → Preferences → Access Tokens → Add new token. Scopes: read_api, read_repository.' },
+                    { title: 'Set GITLAB_URL', desc: 'Format: https://gitlab.com (or your self-hosted instance).' },
+                    { title: 'Set GITLAB_TOKEN', desc: 'Paste the token (starts with glpat-). Auth scheme: PRIVATE-TOKEN header.' },
+                  ]} />
+                </div>
+              </DocSection>
+
+              <DocSection title="Jenkins" icon={Cog}>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">Provides: pipeline/build data.</p>
+                  <StepList steps={[
+                    { title: 'Generate an API token', desc: 'Jenkins → Your user → Configure → API Token → Add new token.' },
+                    { title: 'Encode credentials', desc: 'Base64 encode username:api-token.' },
+                    { title: 'Set JENKINS_URL', desc: 'Format: https://jenkins.your-company.com' },
+                    { title: 'Set JENKINS_TOKEN', desc: 'Paste the base64-encoded username:api-token string.' },
+                  ]} />
+                </div>
+              </DocSection>
+
+              <DocSection title="Bitbucket" icon={GitBranch}>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">Provides: releases, deployments, pipeline data.</p>
+                  <StepList steps={[
+                    { title: 'Create an App Password', desc: 'Bitbucket → Personal settings → App passwords → Create app password. Permissions: Repositories (Read), Pipelines (Read).' },
+                    { title: 'Set BITBUCKET_URL', desc: 'Format: https://api.bitbucket.org' },
+                    { title: 'Set BITBUCKET_TOKEN', desc: 'Paste the app password. Auth scheme: Bearer.' },
+                  ]} />
+                </div>
+              </DocSection>
+
+              <DocSection title="AWS" icon={HardDrive}>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">Provides: pipeline (CodePipeline) and deployment data.</p>
+                  <StepList steps={[
+                    { title: 'Create an access key', desc: 'AWS IAM → Users → Your user → Security credentials → Create access key.' },
+                    { title: 'Set AWS_URL', desc: 'Format: https://codepipeline.{region}.amazonaws.com (or your service endpoint).' },
+                    { title: 'Set AWS_TOKEN', desc: 'Paste the access key. Auth scheme: Bearer.' },
+                  ]} />
+                  <Callout type="warning">For production, use IAM roles with least-privilege policies instead of long-lived access keys.</Callout>
+                </div>
+              </DocSection>
+
+              <DocSection title="Selenium Grid" icon={Monitor}>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">Provides: test execution data from Selenium Grid.</p>
+                  <StepList steps={[
+                    { title: 'Locate your Grid hub URL', desc: 'Usually http://selenium-grid-host:4444 or your cloud provider URL.' },
+                    { title: 'Set SELENIUM_URL', desc: 'Format: https://selenium-grid.your-company.com' },
+                    { title: 'Set SELENIUM_TOKEN', desc: 'Paste the access token if authentication is enabled. Auth scheme: Bearer.' },
+                  ]} />
+                </div>
+              </DocSection>
+            </CardContent>
+          </Card>
+
+          {/* AI Provider Configuration */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Brain size={20} className="text-primary" />
+                AI Provider Configuration
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                AI features (Release Advisor, Risk Prediction, QA Assistant) require an AI provider. Configure providers
+                via <strong>Settings → AI Providers</strong> in the dashboard (Admin only). Multiple providers can be configured simultaneously
+                with one set as the active provider.
+              </p>
+
+              <DocSection title="OpenAI" icon={Brain} defaultOpen>
+                <div className="space-y-3">
+                  <StepList steps={[
+                    { title: 'Get an API key', desc: 'OpenAI Platform → API Keys → Create new secret key (https://platform.openai.com/api-keys).' },
+                    { title: 'Add in Settings', desc: 'Settings → AI Providers → Add Provider → Select OpenAI → Paste API key.' },
+                    { title: 'Select a model', desc: 'Recommended: gpt-4o for best quality, gpt-4o-mini for cost efficiency.' },
+                  ]} />
+                  <Callout type="info">Supported models: gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo. Model selection affects quality, speed, and cost.</Callout>
+                </div>
+              </DocSection>
+
+              <DocSection title="Anthropic (Claude)" icon={Brain}>
+                <div className="space-y-3">
+                  <StepList steps={[
+                    { title: 'Get an API key', desc: 'Anthropic Console → API Keys → Create Key (https://console.anthropic.com/settings/keys).' },
+                    { title: 'Add in Settings', desc: 'Settings → AI Providers → Add Provider → Select Anthropic → Paste API key.' },
+                    { title: 'Select a model', desc: 'Recommended: claude-3.5-sonnet for balanced performance.' },
+                  ]} />
+                  <Callout type="info">Supported models: claude-3.5-sonnet, claude-3-opus, claude-3-haiku.</Callout>
+                </div>
+              </DocSection>
+
+              <DocSection title="Google AI (Gemini)" icon={Brain}>
+                <div className="space-y-3">
+                  <StepList steps={[
+                    { title: 'Get an API key', desc: 'Google AI Studio → Get API Key (https://aistudio.google.com/app/apikey).' },
+                    { title: 'Add in Settings', desc: 'Settings → AI Providers → Add Provider → Select Google → Paste API key.' },
+                    { title: 'Select a model', desc: 'Recommended: gemini-1.5-pro for advanced reasoning.' },
+                  ]} />
+                  <Callout type="info">Supported models: gemini-1.5-pro, gemini-1.5-flash, gemini-1.0-pro.</Callout>
+                </div>
+              </DocSection>
+
+              <DocSection title="Meta (LLaMA — Self-Hosted)" icon={Brain}>
+                <div className="space-y-3">
+                  <StepList steps={[
+                    { title: 'Deploy a LLaMA model', desc: 'Host LLaMA via Ollama, vLLM, or a cloud provider with an OpenAI-compatible API.' },
+                    { title: 'Add in Settings', desc: 'Settings → AI Providers → Add Provider → Select Meta → Enter your endpoint URL and API key.' },
+                    { title: 'Select a model', desc: 'Depends on your deployment: llama-3.1-70b, llama-3.1-8b, etc.' },
+                  ]} />
+                  <Callout type="warning">Self-hosted models require your own infrastructure. Ensure the endpoint is accessible from the proxy server.</Callout>
+                </div>
+              </DocSection>
+            </CardContent>
+          </Card>
+
+          {/* Environment Variable Summary Table */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Key size={20} className="text-primary" />
+                Complete Environment Variable Reference
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Callout type="tip">
+                All variables are set in <code className="text-xs bg-muted rounded px-1 py-0.5">server/.env</code>. Copy <code className="text-xs bg-muted rounded px-1 py-0.5">server/.env.example</code> as a starting template.
+                Only configure the integrations and auth providers you need — unconfigured ones are simply disabled.
+              </Callout>
+              <div className="overflow-x-auto mt-4">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-2 px-3 font-semibold text-foreground">Category</th>
+                      <th className="text-left py-2 px-3 font-semibold text-foreground">Variables</th>
+                      <th className="text-left py-2 px-3 font-semibold text-foreground">Auth Scheme</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-muted-foreground">
+                    <tr className="border-b border-border/50"><td className="py-2 px-3 font-medium text-foreground">Azure DevOps</td><td className="py-2 px-3 font-mono text-xs">AZURE_DEVOPS_URL, AZURE_DEVOPS_TOKEN</td><td className="py-2 px-3">Basic (:token)</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3 font-medium text-foreground">Jira Cloud</td><td className="py-2 px-3 font-mono text-xs">JIRA_URL, JIRA_TOKEN</td><td className="py-2 px-3">Basic (email:token)</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3 font-medium text-foreground">SonarQube</td><td className="py-2 px-3 font-mono text-xs">SONARQUBE_URL, SONARQUBE_TOKEN</td><td className="py-2 px-3">Basic (token:)</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3 font-medium text-foreground">GitHub</td><td className="py-2 px-3 font-mono text-xs">GITHUB_URL, GITHUB_TOKEN</td><td className="py-2 px-3">Bearer</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3 font-medium text-foreground">GitLab</td><td className="py-2 px-3 font-mono text-xs">GITLAB_URL, GITLAB_TOKEN</td><td className="py-2 px-3">PRIVATE-TOKEN</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3 font-medium text-foreground">Jenkins</td><td className="py-2 px-3 font-mono text-xs">JENKINS_URL, JENKINS_TOKEN</td><td className="py-2 px-3">Basic (user:token)</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3 font-medium text-foreground">Bitbucket</td><td className="py-2 px-3 font-mono text-xs">BITBUCKET_URL, BITBUCKET_TOKEN</td><td className="py-2 px-3">Bearer</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3 font-medium text-foreground">AWS</td><td className="py-2 px-3 font-mono text-xs">AWS_URL, AWS_TOKEN</td><td className="py-2 px-3">Bearer</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3 font-medium text-foreground">Selenium Grid</td><td className="py-2 px-3 font-mono text-xs">SELENIUM_URL, SELENIUM_TOKEN</td><td className="py-2 px-3">Bearer</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3 font-medium text-foreground">Entra ID (SSO)</td><td className="py-2 px-3 font-mono text-xs">AZURE_AD_TENANT_ID, AZURE_AD_CLIENT_ID, AZURE_AD_CLIENT_SECRET</td><td className="py-2 px-3">OIDC</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3 font-medium text-foreground">GitHub (SSO)</td><td className="py-2 px-3 font-mono text-xs">GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET</td><td className="py-2 px-3">OAuth 2.0</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3 font-medium text-foreground">Google (SSO)</td><td className="py-2 px-3 font-mono text-xs">GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET</td><td className="py-2 px-3">OAuth 2.0</td></tr>
+                    <tr className="border-b border-border/50"><td className="py-2 px-3 font-medium text-foreground">AWS SSO (SAML)</td><td className="py-2 px-3 font-mono text-xs">AWS_SSO_ENTRY_POINT, AWS_SSO_ISSUER, AWS_SSO_CERT</td><td className="py-2 px-3">SAML 2.0</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
