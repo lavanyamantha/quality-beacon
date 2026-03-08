@@ -54,6 +54,7 @@ interface NotificationChannel {
   id: string;
   type: 'email' | 'slack' | 'teams';
   target: string;
+  webhookUrl?: string;
   enabled: boolean;
 }
 
