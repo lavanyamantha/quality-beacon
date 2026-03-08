@@ -142,7 +142,9 @@ export default function QAAssistantPage() {
             <div className={`max-w-[70%] rounded-lg px-4 py-3 text-sm ${
               msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
             }`}>
-              <div className="whitespace-pre-wrap">{msg.content}</div>
+              <div className="prose prose-sm prose-invert max-w-none [&>blockquote]:border-l-primary/50 [&>blockquote]:bg-primary/5 [&>blockquote]:rounded-r-lg [&>blockquote]:py-2 [&>blockquote]:px-3 [&>hr]:border-border/50">
+                <ReactMarkdown>{msg.content}</ReactMarkdown>
+              </div>
             </div>
           </motion.div>
         ))}
