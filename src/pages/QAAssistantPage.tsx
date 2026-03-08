@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bot, Send, ShieldOff, Settings } from 'lucide-react';
+import { Bot, Send, ShieldOff, Settings, FlaskConical, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
@@ -8,6 +8,8 @@ import { useDemoMode } from '@/contexts/DemoModeContext';
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  source?: 'mock' | 'live';
+  model?: string;
 }
 
 const mockResponses: Record<string, string> = {
@@ -81,17 +83,43 @@ function getResponse(input: string): string {
   return mockResponses['default'];
 }
 
+function SourceBadge({ source, model }: { source: 'mock' | 'live'; model?: string }) {
+  if (source === 'mock') {
+    return (
+      <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border/30">
+        <FlaskConical size={12} className="text-warning" />
+        <span className="text-[10px] font-medium text-warning">Mock Response</span>
+        <span className="text-[10px] text-muted-foreground">— Demo data, not from a live AI model</span>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border/30">
+      <Sparkles size={12} className="text-chart-2" />
+      <span className="text-[10px] font-medium text-chart-2">Live AI</span>
+      {model && <span className="text-[10px] text-muted-foreground">— {model}</span>}
+    </div>
+  );
+}
+
 export default function QAAssistantPage() {
-  const { aiMode } = useDemoMode();
+  const { aiMode, demoMode } = useDemoMode();
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: "Hello! I'm your QA AI Assistant. Ask me about release readiness, flaky tests, coverage gaps, or service health." },
+    { role: 'assistant', content: "Hello! I'm your QA AI Assistant. Ask me about release readiness, flaky tests, coverage gaps, or service health.", source: 'mock' },
   ]);
   const [input, setInput] = useState('');
 
   const send = () => {
     if (!input.trim()) return;
     const userMsg: Message = { role: 'user', content: input };
-    const assistantMsg: Message = { role: 'assistant', content: getResponse(input) };
+    // In demo mode, always use mock. In live mode, this would call the AI backend.
+    const isMock = demoMode;
+    const assistantMsg: Message = {
+      role: 'assistant',
+      content: getResponse(input),
+      source: isMock ? 'mock' : 'live',
+      model: isMock ? undefined : 'google/gemini-3-flash-preview',
+    };
     setMessages(prev => [...prev, userMsg, assistantMsg]);
     setInput('');
   };
@@ -121,9 +149,24 @@ export default function QAAssistantPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] max-w-3xl">
-      <div className="mb-4">
-        <h1 className="text-xl font-bold text-foreground">QA AI Assistant</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Ask questions about quality metrics and release health</p>
+      <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h1 className="text-xl font-bold text-foreground">QA AI Assistant</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Ask questions about quality metrics and release health</p>
+        </div>
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary border border-border text-[11px]">
+          {demoMode ? (
+            <>
+              <FlaskConical size={12} className="text-warning" />
+              <span className="text-warning font-medium">Mock Mode</span>
+            </>
+          ) : (
+            <>
+              <Sparkles size={12} className="text-chart-2" />
+              <span className="text-chart-2 font-medium">Live AI</span>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-3 mb-4">
@@ -145,6 +188,9 @@ export default function QAAssistantPage() {
               <div className="prose prose-sm prose-invert max-w-none [&>blockquote]:border-l-primary/50 [&>blockquote]:bg-primary/5 [&>blockquote]:rounded-r-lg [&>blockquote]:py-2 [&>blockquote]:px-3 [&>hr]:border-border/50">
                 <ReactMarkdown>{msg.content}</ReactMarkdown>
               </div>
+              {msg.role === 'assistant' && msg.source && (
+                <SourceBadge source={msg.source} model={msg.model} />
+              )}
             </div>
           </motion.div>
         ))}
