@@ -350,35 +350,48 @@ export default function SettingsPage() {
     </div>
   );
 
-  const handleTestAIConnection = (provider: AIProvider) => {
-    if (!provider.apiKey.trim() || provider.apiKey.includes('redacted')) {
-      toast({
-        title: 'API Key Required',
-        description: `Please provide a valid API key for ${provider.provider} before testing.`,
-        variant: 'destructive',
-      });
-      setProviders(prev => prev.map(pr => pr.id === provider.id ? { ...pr, connectionStatus: 'failed' as const, lastTested: new Date().toLocaleTimeString() } : pr));
-      return;
-    }
-
+  const handleTestAIConnection = async (provider: AIProvider) => {
     setProviders(prev => prev.map(pr => pr.id === provider.id ? { ...pr, connectionStatus: 'testing' as const } : pr));
 
-    setTimeout(() => {
-      // Simulate: enabled providers with non-redacted keys succeed
-      const success = provider.enabled && !provider.apiKey.includes('redacted');
+    if (proxyEnabled) {
+      try {
+        // Test AI provider through the proxy
+        const result = await proxyTestConnection(`ai-${provider.provider}`);
+        const success = result.ok;
+        setProviders(prev => prev.map(pr => pr.id === provider.id ? {
+          ...pr,
+          connectionStatus: success ? 'success' as const : 'failed' as const,
+          lastTested: new Date().toLocaleTimeString(),
+        } : pr));
+        toast({
+          title: success ? 'AI Connection Verified' : 'AI Connection Failed',
+          description: success
+            ? `${provider.provider} / ${provider.model} responded successfully${result.responseTimeMs ? ` (${result.responseTimeMs}ms)` : ''}.`
+            : result.error || `Could not reach ${provider.provider}.`,
+          variant: success ? undefined : 'destructive',
+        });
+      } catch {
+        setProviders(prev => prev.map(pr => pr.id === provider.id ? {
+          ...pr,
+          connectionStatus: 'failed' as const,
+          lastTested: new Date().toLocaleTimeString(),
+        } : pr));
+        toast({ title: 'Connection Failed', description: 'Could not reach proxy server. Is it running?', variant: 'destructive' });
+      }
+    } else {
+      // No proxy — simulate and guide
+      await new Promise(r => setTimeout(r, 1500));
       setProviders(prev => prev.map(pr => pr.id === provider.id ? {
         ...pr,
-        connectionStatus: success ? 'success' as const : 'failed' as const,
+        connectionStatus: 'failed' as const,
         lastTested: new Date().toLocaleTimeString(),
       } : pr));
       toast({
-        title: success ? 'AI Connection Verified' : 'AI Connection Failed',
-        description: success
-          ? `${provider.provider} / ${provider.model} responded successfully.`
-          : `Could not reach ${provider.provider}. Check API key and model name.`,
-        variant: success ? undefined : 'destructive',
+        title: 'Proxy Not Configured',
+        description: 'Set VITE_PROXY_URL and run the proxy server to enable AI connection testing. API keys are managed server-side.',
+        variant: 'destructive',
       });
-    }, 2000);
+    }
   };
 
   const renderAIProviders = () => {
