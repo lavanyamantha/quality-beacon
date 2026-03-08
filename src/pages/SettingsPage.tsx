@@ -539,7 +539,7 @@ export default function SettingsPage() {
             ].map(mode => (
               <button
                 key={mode.value}
-                onClick={() => setDecisionMode(mode.value)}
+                onClick={() => setDecisionMode(mode.value as 'support' | 'autonomous' | 'disabled')}
                 className={`flex-1 p-4 rounded-lg border text-left transition-all ${
                   decisionMode === mode.value
                     ? 'bg-primary/10 border-primary/40'
