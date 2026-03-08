@@ -57,6 +57,7 @@ const App = () => (
             </Routes>
           </BrowserRouter>
         </BrandingProvider>
+        </ServiceHealthConfigProvider>
         </IntegrationsProvider>
         </ReleaseProvider>
       </DemoModeProvider>
