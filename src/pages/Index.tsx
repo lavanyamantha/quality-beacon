@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useRelease } from '@/contexts/ReleaseContext';
 import ReadinessGauge from '@/components/dashboard/ReadinessGauge';
@@ -8,11 +9,15 @@ import DefectSummaryCard from '@/components/dashboard/DefectSummaryCard';
 import PipelineStatusCard from '@/components/dashboard/PipelineStatusCard';
 import FlakyTestCard from '@/components/dashboard/FlakyTestCard';
 import ReadinessTrendCard from '@/components/dashboard/ReadinessTrendCard';
-import { Database, Settings } from 'lucide-react';
+import { Database, Settings, Download, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { releases } from '@/data/mockData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const environments = ['All', 'Dev', 'QA', 'Stage', 'Prod'];
 
