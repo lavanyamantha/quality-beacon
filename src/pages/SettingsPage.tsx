@@ -269,34 +269,12 @@ export default function SettingsPage() {
                 <AlertTriangle size={14} /> Failed to reach {int.name}. Check URL and credentials.
               </div>
             )}
-            <div className="grid md:grid-cols-2 gap-x-4 gap-y-1">
+            <div className="grid md:grid-cols-1 gap-x-4 gap-y-1">
               <Label className="text-xs text-muted-foreground">URL</Label>
-              <Label className="text-xs text-muted-foreground">{int.authLabel}</Label>
-              <Input defaultValue={int.url} className="bg-muted/30 border-border text-sm h-10" />
-              <div className="relative">
-                <Input
-                  type={showApiKeys[int.id] ? 'text' : 'password'}
-                  value={int.token}
-                  placeholder={int.authPlaceholder}
-                  onChange={e => setIntegrations(prev => prev.map(i => i.id === int.id ? { ...i, token: e.target.value } : i))}
-                  className="bg-muted/30 border-border text-sm font-mono h-10 pr-10"
-                />
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="absolute right-0 top-0 h-10 w-10 shrink-0"
-                  onClick={() => toggleApiKeyVisibility(int.id)}
-                >
-                  {showApiKeys[int.id] ? <EyeOff size={14} /> : <Eye size={14} />}
-                </Button>
-              </div>
+              <Input defaultValue={int.url} className="bg-muted/30 border-border text-sm h-10" readOnly />
               <p className="text-[10px] text-muted-foreground">Base URL of your {int.name} instance</p>
-              <p className="text-[10px] text-muted-foreground">
-                {int.type === 'azure-devops' && 'Azure DevOps → User Settings → Personal Access Tokens'}
-                {int.type === 'jira' && 'Atlassian → Account Settings → Security → API Tokens'}
-                {int.type === 'sonarqube' && 'SonarQube → My Account → Security → Tokens'}
-                {int.type === 'github' && 'GitHub → Settings → Developer Settings → Personal Access Tokens'}
-                {int.type === 'aws' && 'AWS → IAM → Security Credentials → Access Keys'}
+              <p className="text-[10px] text-muted-foreground italic mt-1">
+                Credentials are managed securely on the server. Configure them in <code className="text-primary">server/.env</code>
               </p>
             </div>
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
