@@ -42,6 +42,7 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps) {
   const location = useLocation();
+  const { isAdmin } = useAuth();
   const { demoMode } = useDemoMode();
   const { brandName, brandLogo } = useBranding();
 
