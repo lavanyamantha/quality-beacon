@@ -16,6 +16,7 @@ import TimelinePage from "./pages/TimelinePage";
 import RiskPredictionPage from "./pages/RiskPredictionPage";
 import QAAssistantPage from "./pages/QAAssistantPage";
 import SettingsPage from "./pages/SettingsPage";
+import DocumentationPage from "./pages/DocumentationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
