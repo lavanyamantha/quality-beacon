@@ -127,7 +127,14 @@ export default function SettingsPage() {
   const [integrations, setIntegrations] = useState(initialIntegrations);
   const [providers, setProviders] = useState(initialProviders);
   const [environments, setEnvironments] = useState(initialEnvironments);
-  const [channels, setChannels] = useState(loadChannels);
+  const [channels, setChannelsRaw] = useState(loadChannels);
+  const setChannels: typeof setChannelsRaw = (update) => {
+    setChannelsRaw(prev => {
+      const next = typeof update === 'function' ? update(prev) : update;
+      try { localStorage.setItem(CHANNELS_STORAGE_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
   const { demoMode, setDemoMode } = useDemoMode();
   
   const [testingConnection, setTestingConnection] = useState<Record<string, 'idle' | 'testing' | 'success' | 'failed'>>({});
