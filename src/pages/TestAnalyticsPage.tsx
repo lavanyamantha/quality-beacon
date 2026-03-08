@@ -1,24 +1,28 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRelease } from '@/contexts/ReleaseContext';
 import { getTestExecutionsForRelease } from '@/data/releaseDataHelper';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar, Legend } from 'recharts';
 import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useIntegrations } from '@/contexts/IntegrationsContext';
 import NoDataPlaceholder from '@/components/NoDataPlaceholder';
 import ReleaseCompareSelector from '@/components/ReleaseCompareSelector';
 import { Release } from '@/data/mockData';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, ExternalLink } from 'lucide-react';
 
-function StatCard({ label, value, color = 'text-foreground', delta, deltaLabel }: {
-  label: string; value: string; color?: string; delta?: number; deltaLabel?: string;
+function StatCard({ label, value, color = 'text-foreground', delta, deltaLabel, href }: {
+  label: string; value: string; color?: string; delta?: number; deltaLabel?: string; href?: string | null;
 }) {
   const DeltaIcon = delta && delta > 0 ? TrendingUp : delta && delta < 0 ? TrendingDown : Minus;
   const deltaColor = delta && delta > 0 ? 'text-success' : delta && delta < 0 ? 'text-destructive' : 'text-muted-foreground';
 
-  return (
-    <div className="dashboard-card">
+  const content = (
+    <>
       <p className="metric-label">{label}</p>
-      <p className={`metric-value ${color}`}>{value}</p>
+      <p className={`metric-value ${color} ${href ? 'group-hover:underline' : ''}`}>
+        {value}
+        {href && <ExternalLink size={12} className="inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />}
+      </p>
       {delta !== undefined && (
         <div className={`flex items-center gap-1 mt-1 ${deltaColor}`}>
           <DeltaIcon size={10} />
@@ -27,14 +31,49 @@ function StatCard({ label, value, color = 'text-foreground', delta, deltaLabel }
           </span>
         </div>
       )}
-    </div>
+    </>
   );
+
+  if (href) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className="dashboard-card group cursor-pointer hover:border-primary/30 transition-colors">
+        {content}
+      </a>
+    );
+  }
+
+  return <div className="dashboard-card">{content}</div>;
 }
 
 export default function TestAnalyticsPage() {
   const { demoMode } = useDemoMode();
   const { activeRelease } = useRelease();
+  const { integrations } = useIntegrations();
   const [compareRelease, setCompareRelease] = useState<Release | null>(null);
+
+  // Find connected test source for deep-linking
+  const testSource = integrations.find(i => i.provides.includes('test') && i.status === 'connected');
+
+  const buildTestQueryUrl = useCallback((filter?: { outcome?: string }) => {
+    if (!testSource?.url) return null;
+    const baseUrl = testSource.url.replace(/\/+$/, '');
+    switch (testSource.type) {
+      case 'azure-devops': {
+        const outcome = filter?.outcome ? `&outcome=${encodeURIComponent(filter.outcome)}` : '';
+        return `${baseUrl}/_testManagement/runs?${outcome}`;
+      }
+      case 'github':
+        return `${baseUrl}/actions?query=${encodeURIComponent(filter?.outcome === 'failed' ? 'is:failure' : filter?.outcome === 'passed' ? 'is:success' : '')}`;
+      case 'gitlab':
+        return `${baseUrl}/-/pipelines?status=${filter?.outcome === 'failed' ? 'failed' : filter?.outcome === 'passed' ? 'success' : ''}`;
+      case 'sonarqube':
+        return `${baseUrl}/dashboard?id=`;
+      case 'jenkins':
+        return `${baseUrl}`;
+      default:
+        return null;
+    }
+  }, [testSource]);
 
   if (!demoMode) return (<div className="space-y-6"><div><h1 className="text-xl font-bold text-foreground">Test Analytics</h1><p className="text-sm text-muted-foreground mt-0.5">Test execution trends and metrics</p></div><NoDataPlaceholder title="Test Analytics" /></div>);
 
@@ -84,24 +123,28 @@ export default function TestAnalyticsPage() {
           label="Total Tests"
           value={latest.total.toLocaleString()}
           delta={compareLatest ? ((latest.total - compareLatest.total) / compareLatest.total) * 100 : undefined}
+          href={buildTestQueryUrl()}
         />
         <StatCard
           label="Passed"
           value={latest.passed.toLocaleString()}
           color="text-success"
           delta={compareLatest ? ((latest.passed - compareLatest.passed) / compareLatest.passed) * 100 : undefined}
+          href={buildTestQueryUrl({ outcome: 'passed' })}
         />
         <StatCard
           label="Failed"
           value={latest.failed.toLocaleString()}
           color="text-destructive"
           delta={compareLatest ? ((latest.failed - compareLatest.failed) / compareLatest.failed) * 100 : undefined}
+          href={buildTestQueryUrl({ outcome: 'failed' })}
         />
         <StatCard
           label="Pass Rate"
           value={`${passRate.toFixed(1)}%`}
           color="text-primary"
           delta={comparePassRate ? passRate - comparePassRate : undefined}
+          href={buildTestQueryUrl()}
         />
       </div>
 
