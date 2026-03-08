@@ -40,7 +40,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
             </div>
             <div className="sm:hidden text-xs font-bold text-primary">{activeRelease.version}</div>
             <div className="hidden md:block text-xs text-muted-foreground">
-              Env: <span className="font-medium text-foreground">{selectedEnv === 'All' ? activeRelease.environment : selectedEnv}</span>
+              Env: <span className="font-medium text-foreground">{selectedEnv}</span>
             </div>
             {demoMode && (
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-warning/15 border border-warning/30 text-warning">
