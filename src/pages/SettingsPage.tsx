@@ -133,21 +133,49 @@ export default function SettingsPage() {
   const [providers, setProvidersRaw] = useState(() => loadFromStorage<AIProvider>(PROVIDERS_KEY, defaultProviders));
   const [environments, setEnvironmentsRaw] = useState(() => loadFromStorage<Environment>(ENVIRONMENTS_KEY, defaultEnvironments));
   const [channels, setChannelsRaw] = useState(() => loadFromStorage<NotificationChannel>(CHANNELS_KEY, defaultChannels));
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
 
-  const makePersisted = <T,>(key: string, setter: React.Dispatch<React.SetStateAction<T[]>>) => {
+  const proxyEnabled = isProxyEnabled();
+
+  // Load settings from proxy server on mount (if available)
+  useEffect(() => {
+    if (!proxyEnabled) { setSettingsLoaded(true); return; }
+    fetchSettings()
+      .then((data) => {
+        if (data.integrations) setIntegrationsRaw(data.integrations);
+        if (data.providers) setProvidersRaw(data.providers);
+        if (data.environments) setEnvironmentsRaw(data.environments);
+        if (data.channels) setChannelsRaw(data.channels);
+        setSettingsLoaded(true);
+      })
+      .catch(() => {
+        // Proxy unavailable — keep localStorage/default data
+        setSettingsLoaded(true);
+      });
+  }, [proxyEnabled]);
+
+  // Persist helper: saves to proxy (if enabled) + localStorage fallback
+  const makePersisted = <T,>(key: string, section: string, setter: React.Dispatch<React.SetStateAction<T[]>>) => {
     return (update: React.SetStateAction<T[]>) => {
       setter(prev => {
         const next = typeof update === 'function' ? (update as (prev: T[]) => T[])(prev) : update;
+        // Always keep localStorage in sync as fallback
         try { localStorage.setItem(key, JSON.stringify(next)); } catch { /* ignore */ }
+        // Persist to proxy server if available
+        if (proxyEnabled) {
+          saveSettingsSection(section, next).catch(() => {
+            console.warn(`Failed to save ${section} to proxy — localStorage used as fallback`);
+          });
+        }
         return next;
       });
     };
   };
 
-  const setIntegrations = makePersisted(INTEGRATIONS_KEY, setIntegrationsRaw);
-  const setProviders = makePersisted(PROVIDERS_KEY, setProvidersRaw);
-  const setEnvironments = makePersisted(ENVIRONMENTS_KEY, setEnvironmentsRaw);
-  const setChannels = makePersisted(CHANNELS_KEY, setChannelsRaw);
+  const setIntegrations = makePersisted(INTEGRATIONS_KEY, 'integrations', setIntegrationsRaw);
+  const setProviders = makePersisted(PROVIDERS_KEY, 'providers', setProvidersRaw);
+  const setEnvironments = makePersisted(ENVIRONMENTS_KEY, 'environments', setEnvironmentsRaw);
+  const setChannels = makePersisted(CHANNELS_KEY, 'channels', setChannelsRaw);
   const { demoMode, setDemoMode } = useDemoMode();
   
   const [testingConnection, setTestingConnection] = useState<Record<string, 'idle' | 'testing' | 'success' | 'failed'>>({});
