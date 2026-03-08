@@ -525,7 +525,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       ))}
-      <Button variant="outline" className="w-full border-dashed" onClick={() => { setNewAIProvider('openai'); setNewAIModel(''); setNewAIApiKey(''); setAddProviderDialogOpen(true); }}>
+      <Button variant="outline" className="w-full border-dashed" onClick={() => { setNewAIProvider('openai'); setNewAIModel(''); setAddProviderDialogOpen(true); }}>
         <Plus size={14} className="mr-2" /> Add AI Provider
       </Button>
 
