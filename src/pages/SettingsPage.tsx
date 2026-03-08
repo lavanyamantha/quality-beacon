@@ -123,6 +123,15 @@ export default function SettingsPage() {
   const { demoMode, setDemoMode } = useDemoMode();
   const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({});
   const [testingConnection, setTestingConnection] = useState<Record<string, 'idle' | 'testing' | 'success' | 'failed'>>({});
+  const { updateCredentials, updateStatus: updateIntegrationStatus } = useIntegrations();
+
+  // Sync credentials to global IntegrationsContext whenever local integrations change
+  useEffect(() => {
+    for (const int of integrations) {
+      updateCredentials(int.id, int.url, int.token);
+      updateIntegrationStatus(int.id, int.status, int.lastSync);
+    }
+  }, [integrations]);
 
   // add integration dialog state
   const [addDialogOpen, setAddDialogOpen] = useState(false);
