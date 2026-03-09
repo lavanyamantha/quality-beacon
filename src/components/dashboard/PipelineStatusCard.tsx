@@ -3,9 +3,9 @@ import { getPipelinesForRelease } from '@/data/releaseDataHelper';
 import { GitBranch, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
 const statusIcon = {
-  passing: <CheckCircle size={12} className="text-success" />,
-  failing: <XCircle size={12} className="text-destructive" />,
-  unstable: <AlertTriangle size={12} className="text-warning" />,
+  passing: <CheckCircle size={12} className="text-success flex-shrink-0" />,
+  failing: <XCircle size={12} className="text-destructive flex-shrink-0" />,
+  unstable: <AlertTriangle size={12} className="text-warning flex-shrink-0" />,
 };
 
 export default function PipelineStatusCard() {
@@ -27,12 +27,12 @@ export default function PipelineStatusCard() {
         <p className="metric-label">Passing</p>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 overflow-hidden">
         {pipelines.map(p => (
-          <div key={p.id} className="flex items-center gap-2 text-xs">
+          <div key={p.id} className="flex items-center gap-2 text-xs min-w-0">
             {statusIcon[p.status]}
-            <span className="font-mono text-foreground flex-1 truncate">{p.name}</span>
-            <span className="text-muted-foreground">{p.successRate}%</span>
+            <span className="font-mono text-foreground flex-1 truncate min-w-0">{p.name}</span>
+            <span className="text-muted-foreground flex-shrink-0">{p.successRate}%</span>
           </div>
         ))}
       </div>

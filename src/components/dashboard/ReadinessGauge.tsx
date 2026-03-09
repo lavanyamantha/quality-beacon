@@ -28,15 +28,15 @@ export default function ReadinessGauge() {
   }));
 
   return (
-    <div className="dashboard-card col-span-2">
+    <div className="dashboard-card col-span-1 md:col-span-2">
       <div className="dashboard-card-header">
         <span className="dashboard-card-title">Release Readiness</span>
         <span className="text-xs font-mono text-muted-foreground">{activeRelease.version}</span>
       </div>
       
-      <div className="flex items-center gap-8">
+      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
         <div className="relative flex-shrink-0">
-          <svg width="160" height="160" className="score-gauge -rotate-90">
+          <svg width="140" height="140" viewBox="0 0 160 160" className="score-gauge -rotate-90">
             <circle cx="80" cy="80" r="70" fill="none" stroke="hsl(var(--border))" strokeWidth="8" />
             <motion.circle
               key={score}
@@ -54,7 +54,7 @@ export default function ReadinessGauge() {
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <motion.span
               key={score}
-              className="text-4xl font-bold"
+              className="text-3xl sm:text-4xl font-bold"
               style={{ color }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -68,11 +68,11 @@ export default function ReadinessGauge() {
           </div>
         </div>
 
-        <div className="flex-1 space-y-2.5">
+        <div className="flex-1 w-full space-y-2.5 overflow-hidden">
           {metrics.map(m => (
-            <div key={m.label} className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground w-36 truncate">{m.label}</span>
-              <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden">
+            <div key={m.label} className="flex items-center gap-2 sm:gap-3">
+              <span className="text-xs text-muted-foreground w-24 sm:w-36 truncate flex-shrink-0">{m.label}</span>
+              <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden min-w-0">
                 <motion.div
                   className="h-full rounded-full"
                   style={{ backgroundColor: m.belowThreshold ? 'hsl(var(--warning))' : 'hsl(var(--success))' }}
@@ -81,10 +81,10 @@ export default function ReadinessGauge() {
                   transition={{ duration: 1, ease: 'easeOut' }}
                 />
               </div>
-              <span className={`text-xs font-mono w-12 text-right ${m.belowThreshold ? 'text-warning' : 'text-success'}`}>
+              <span className={`text-xs font-mono w-10 sm:w-12 text-right flex-shrink-0 ${m.belowThreshold ? 'text-warning' : 'text-success'}`}>
                 {m.value}%
               </span>
-              <span className="text-[10px] text-muted-foreground w-6">{m.weight}%</span>
+              <span className="text-[10px] text-muted-foreground w-6 flex-shrink-0 hidden sm:block">{m.weight}%</span>
             </div>
           ))}
         </div>
