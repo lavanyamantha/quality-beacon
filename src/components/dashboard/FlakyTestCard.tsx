@@ -18,13 +18,13 @@ export default function FlakyTestCard() {
 
       <div className="space-y-2.5">
         {sorted.slice(0, 5).map(t => (
-          <div key={t.id} className="flex items-center gap-3">
+          <div key={t.id} className="flex items-center gap-3 min-w-0">
             <div className="flex-1 min-w-0">
               <p className="text-xs font-mono text-foreground truncate">{t.name}</p>
-              <p className="text-[10px] text-muted-foreground">{t.module}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{t.module}</p>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-16 h-1.5 rounded-full bg-secondary overflow-hidden">
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="w-12 sm:w-16 h-1.5 rounded-full bg-secondary overflow-hidden">
                 <div
                   className="h-full rounded-full"
                   style={{
