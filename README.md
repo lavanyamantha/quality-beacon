@@ -4,7 +4,7 @@
 
 AI QA Command Center is a centralized Decision Support System for engineering organizations. It aggregates quality signals from CI/CD pipelines, testing systems, defect tracking, and microservice health endpoints — providing a single pane of glass for software quality with AI-driven insights.
 
-![Dashboard Preview](docs/dashboard-preview.png)
+![Dashboard Preview](src/assets/docs/dashboard-overview.jpg)
 
 ---
 
